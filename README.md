@@ -1,34 +1,49 @@
 # yumin-choi
 
-프론트엔드 개발자 최유민(Yumin Choi)의 개인 사이트. 작업, 문제 해결 이야기, 걸어온 길을 한 페이지에 담았습니다.
+Personal site of Yumin Choi (최유민), a frontend developer. Home introduces who I am, Resume lists the full career history, and Blog records problem-solving write-ups.
 
 ## Tech Stack
 
 - **Next.js 16** (App Router) · **React 19** · **TypeScript**
-- **Tailwind CSS 4**, 히어로와 작업 카드 일러스트는 CSS Modules
-- **next-themes**: 라이트/다크 테마 전환
+- **Tailwind CSS 4** (CSS-first config in `src/app/globals.css`)
+- **next-themes** for light/dark theme switching
+- **MDX** (`@next/mdx`, `remark-gfm`) for blog posts
 
-디자인 토큰(색상, 폰트)은 [yumin-devlog](https://github.com/yumin2323/yumin-devlog)와 같습니다.
+Design tokens (colors, fonts) are shared with [yumin-devlog](https://github.com/yumin2323/yumin-devlog).
 
 ## Getting Started
 
 ```bash
 npm install
-npm run dev     # http://localhost:3000
+npm run dev          # http://localhost:3000
+npm run build        # production build
+npx tsc --noEmit     # type check
 ```
 
-## 내용 수정
+## Editing Content
 
-화면에 보이는 내용은 모두 `src/lib/resume.ts` 한 파일에 있습니다.
+Site content lives in `src/lib/resume.ts`.
 
-| 항목 | 설명 |
+| Export | Description |
 | --- | --- |
-| `profile` | 인사말, 자기소개, "지금" 배지, 이메일과 링크 |
-| `works` | 작업 카드. `illustration`으로 그림 종류 선택, `highlights`는 "자세히 보기"에 표시 |
-| `stories` | 문제 → 해결 → 결과 형식의 이야기와 전후 수치 |
-| `timeline`, `education` | 걸어온 길 타임라인 |
-| `skills` | 손에 익은 도구 |
+| `profile` | Headline, intro, the "now" line, core stack, email, and links (Home hero and Resume header) |
+| `about`, `expertise`, `selectedWork` | Home sections. `selectedWork[].work` points to a `works` item by `id` |
+| `works` | Resume projects. `id` is the `/resume#id` anchor, `post` links a related blog slug, `highlights` text may use `**bold**` |
+| `timeline`, `education`, `skills` | Resume experience, education, and skills |
 
-문장 안에 `**굵게**`로 쓰면 화면에서 강조됩니다.
+Blog posts are MDX files in `content/blog/<slug>.mdx`. Each file exports its metadata:
 
-헤더 메뉴는 `src/lib/site.ts`의 `sections`에서 바꿉니다.
+```js
+export const metadata = {
+  title: "...",
+  description: "...",
+  date: "2026-09-29",
+  tags: ["성능"],
+  work: "owlite",   // optional: links the post to a Resume project
+  featured: true,   // optional: shown in Home's selected writing (up to 3)
+};
+```
+
+A post's thumbnail is an inline SVG registered under its slug in `src/components/post-thumbnail.tsx`; posts without one simply show no image.
+
+Header navigation items are defined in `nav` in `src/lib/site.ts`.

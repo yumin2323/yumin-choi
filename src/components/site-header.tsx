@@ -1,27 +1,18 @@
 import Link from "next/link";
+import { SiteNav } from "@/components/site-nav";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { sections, site } from "@/lib/site";
+import { SHELL } from "@/components/section";
+import { site } from "@/lib/site";
 
 export function SiteHeader() {
   return (
-    <header className="sticky top-0 z-10 -mx-5 border-b border-line bg-background/85 px-5 backdrop-blur">
-      <div className="mx-auto flex h-15 max-w-[960px] items-center justify-between gap-4">
-        <Link href="/" className="text-[19px] font-bold tracking-[-0.03em] text-heading">
+    <header className="sticky top-0 z-10 -mx-5 bg-background/90 px-5 backdrop-blur print:hidden">
+      <div className={`${SHELL} flex h-15 items-center justify-between gap-4`}>
+        <Link href="/" className="text-[15px] font-semibold whitespace-nowrap text-heading">
           {site.title}
         </Link>
-        <div className="flex items-center gap-1">
-          {/* 좁은 화면에서는 메뉴를 숨기고 스크롤로 읽도록 */}
-          <nav aria-label="섹션" className="hidden gap-1 sm:flex">
-            {sections.map(({ id, label }) => (
-              <a
-                key={id}
-                href={`/#${id}`}
-                className="rounded-lg px-3 py-1.5 text-[15px] font-medium text-sub hover:bg-soft hover:text-heading"
-              >
-                {label}
-              </a>
-            ))}
-          </nav>
+        <div className="flex items-center gap-1 sm:gap-3">
+          <SiteNav />
           <ThemeToggle />
         </div>
       </div>

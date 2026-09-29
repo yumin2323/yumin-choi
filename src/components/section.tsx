@@ -1,63 +1,90 @@
+import Link from "next/link";
 import type { ReactNode } from "react";
 import type { Highlight } from "@/lib/resume";
 
-/** 홈 화면의 한 구역. 헤더 메뉴가 id로 이동 */
-export function Section({
-  id,
-  title,
-  description,
-  children,
-}: {
-  id: string;
-  title: string;
-  description?: string;
-  children: ReactNode;
-}) {
+/** 사이트 전체 폭. 긴 문단은 안에서 READING으로 다시 좁힌다 */
+export const SHELL = "mx-auto max-w-[960px]";
+
+/** 긴 문단의 읽기 폭 */
+export const READING = "max-w-[680px]";
+
+/** 모든 구역이 공유하는 2단 격자. 왼쪽은 구역 이름, 오른쪽은 본문 */
+export const COLUMNS = "md:grid md:grid-cols-[140px_minmax(0,1fr)] md:gap-10";
+
+/** 한 구역. 위쪽 얇은 구분선으로 앞 구역과 나눈다 */
+export function Section({ id, title, children }: { id: string; title: string; children: ReactNode }) {
   return (
-    <section id={id} aria-labelledby={`${id}-title`} className="py-14 sm:py-20">
-      <h2 id={`${id}-title`} className="text-[26px] leading-[1.35] font-bold tracking-[-0.03em] text-heading sm:text-[32px]">
+    <section id={id} aria-labelledby={`${id}-title`} className={`border-t border-line py-14 sm:py-20 ${COLUMNS}`}>
+      <h2 id={`${id}-title`} className="mb-8 text-[15px] leading-[1.9] font-semibold text-heading md:mb-0">
         {title}
       </h2>
-      {description && <p className="mt-2 text-[17px] text-sub">{description}</p>}
-      <div className="mt-8 sm:mt-10">{children}</div>
+      <div>{children}</div>
     </section>
   );
 }
 
-export function TechChips({ items }: { items: string[] }) {
+/** 본문 속 밑줄 링크. 외부 주소면 새 창으로, 내부 주소면 클라이언트 이동 */
+export function TextLink({ href, children }: { href: string; children: ReactNode }) {
+  const className =
+    "text-heading underline decoration-line decoration-1 underline-offset-[5px] transition-colors hover:decoration-gold";
+  if (href.startsWith("/")) {
+    return (
+      <Link href={href} className={className}>
+        {children}
+      </Link>
+    );
+  }
+  const external = href.startsWith("http");
   return (
-    <ul className="flex flex-wrap gap-1.5">
-      {items.map((item) => (
-        <li key={item} className="rounded-full bg-accent-soft px-2.5 py-1 text-[13px] leading-none font-semibold text-accent">
-          {item}
-        </li>
-      ))}
-    </ul>
+    <a href={href} {...(external && { target: "_blank", rel: "noreferrer" })} className={className}>
+      {children}
+    </a>
   );
 }
 
-/** "**굵게**" 표기를 <strong>으로 바꿔서 출력 */
-function RichText({ text }: { text: string }) {
-  return text.split("**").map((part, i) => (i % 2 === 1 ? <strong key={i} className="font-bold text-heading">{part}</strong> : part));
+/** "관련 글 →" 같은 이동 링크. 화살표만 골드, hover 시 골드 밑줄이 그어짐 */
+export function ArrowLink({ href, children }: { href: string; children: ReactNode }) {
+  return (
+    <Link href={href} className="group inline-flex items-baseline gap-1.5 text-sm text-sub transition-colors hover:text-heading">
+      <span className="link-underline">{children}</span>
+      <span aria-hidden="true" className="text-gold transition-transform group-hover:translate-x-0.5 motion-reduce:transition-none">
+        →
+      </span>
+    </Link>
+  );
 }
 
-const BULLET = "relative pl-4 before:absolute before:top-[0.72em] before:left-0 before:size-1.5 before:rounded-full";
+/** 목록 번호. 골드는 이런 작은 표시에만 쓴다 */
+export function Num({ n }: { n: number }) {
+  return <span className="text-gold tabular-nums">{String(n).padStart(2, "0")}</span>;
+}
+
+/** "**굵게**" 표기를 <strong>으로 바꿔서 출력 */
+export function RichText({ text }: { text: string }) {
+  return text.split("**").map((part, i) =>
+    i % 2 === 1 ? (
+      <strong key={i} className="font-semibold text-heading">
+        {part}
+      </strong>
+    ) : (
+      part
+    ),
+  );
+}
 
 export function Highlights({ items }: { items: Highlight[] }) {
   return (
-    <ul className="space-y-3 text-[15px] leading-[1.7] text-body">
+    <ul className="space-y-4 text-[15px] leading-[1.75]">
       {items.map((item) => (
-        <li key={item.title ?? item.text} className={`${BULLET} before:bg-accent/60`}>
-          {item.title && <p className="font-bold text-heading">{item.title}</p>}
-          <p className={item.title ? "mt-0.5 text-sub" : undefined}>
+        <li key={item.title ?? item.text}>
+          {item.title && <p className="font-semibold text-heading">{item.title}</p>}
+          <p className="text-sub">
             <RichText text={item.text} />
           </p>
           {item.details && (
-            <ul className="mt-1.5 space-y-1 text-sub">
+            <ul className="mt-1 list-disc space-y-0.5 pl-5 text-sub marker:text-line">
               {item.details.map((detail) => (
-                <li key={detail} className={`${BULLET} before:bg-line`}>
-                  {detail}
-                </li>
+                <li key={detail}>{detail}</li>
               ))}
             </ul>
           )}
