@@ -5,7 +5,7 @@ import { sections, site } from "@/lib/site";
 export function SiteHeader() {
   return (
     <header className="sticky top-0 z-10 -mx-5 border-b border-line bg-background/85 px-5 backdrop-blur">
-      <div className="mx-auto flex h-15 max-w-[880px] items-center justify-between gap-4">
+      <div className="mx-auto flex h-15 max-w-[960px] items-center justify-between gap-4">
         <Link href="/" className="text-[19px] font-bold tracking-[-0.03em] text-heading">
           {site.title}
         </Link>

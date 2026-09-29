@@ -1,0 +1,121 @@
+.frame {
+  overflow: hidden;
+  border-radius: 14px;
+}
+
+.frame svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.card {
+  fill: var(--card);
+  stroke: var(--ill-line);
+  stroke-width: 1;
+}
+
+.cardAccent {
+  fill: var(--accent-soft);
+  stroke: var(--accent);
+  stroke-width: 1.5;
+}
+
+.bar {
+  fill: var(--heading);
+  opacity: 0.75;
+}
+
+.barSoft {
+  fill: var(--ill-line);
+}
+
+.barAccent {
+  fill: var(--accent);
+}
+
+.barGreen {
+  fill: var(--green);
+}
+
+.barOrange {
+  fill: var(--orange);
+}
+
+.tint {
+  fill: var(--tint-violet);
+}
+
+.sun {
+  fill: var(--orange);
+}
+
+.mountain {
+  fill: var(--accent);
+  opacity: 0.8;
+}
+
+.dotAccent {
+  fill: var(--accent);
+}
+
+.dotSoft {
+  fill: var(--ill-line);
+}
+
+.edge {
+  stroke: var(--ill-line);
+  stroke-width: 1;
+}
+
+.edgeAccent {
+  stroke: var(--accent);
+  stroke-width: 2;
+}
+
+.axis {
+  stroke: var(--ill-line);
+  stroke-width: 1;
+}
+
+.selection {
+  fill: color-mix(in srgb, var(--accent) 10%, transparent);
+  stroke: var(--accent);
+  stroke-width: 1.5;
+}
+
+.pill {
+  fill: var(--accent);
+}
+
+.glyph,
+.glyphAccent {
+  font-size: 40px;
+  font-weight: 700;
+  fill: var(--heading);
+}
+
+.glyphAccent {
+  fill: var(--accent);
+}
+
+/* 노드 사이로 데이터가 흘러가는 점선 */
+.flow {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 2;
+  stroke-dasharray: 4 5;
+  animation: flow 1.2s linear infinite;
+}
+
+@keyframes flow {
+  to {
+    stroke-dashoffset: -18;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flow {
+    animation: none;
+  }
+}

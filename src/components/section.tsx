@@ -1,14 +1,24 @@
 import type { ReactNode } from "react";
 import type { Highlight } from "@/lib/resume";
 
-/** 홈 화면의 한 구역. 영문 라벨 + 한글 제목, 헤더 메뉴가 id로 이동 */
-export function Section({ id, eyebrow, title, children }: { id: string; eyebrow: string; title: string; children: ReactNode }) {
+/** 홈 화면의 한 구역. 헤더 메뉴가 id로 이동 */
+export function Section({
+  id,
+  title,
+  description,
+  children,
+}: {
+  id: string;
+  title: string;
+  description?: string;
+  children: ReactNode;
+}) {
   return (
-    <section id={id} aria-labelledby={`${id}-title`} className="border-t border-line py-14 sm:py-16">
-      <p className="text-sm font-bold tracking-[0.02em] text-accent uppercase">{eyebrow}</p>
-      <h2 id={`${id}-title`} className="mt-1.5 text-[26px] leading-[1.35] font-bold tracking-[-0.03em] text-heading sm:text-[30px]">
+    <section id={id} aria-labelledby={`${id}-title`} className="py-14 sm:py-20">
+      <h2 id={`${id}-title`} className="text-[26px] leading-[1.35] font-bold tracking-[-0.03em] text-heading sm:text-[32px]">
         {title}
       </h2>
+      {description && <p className="mt-2 text-[17px] text-sub">{description}</p>}
       <div className="mt-8 sm:mt-10">{children}</div>
     </section>
   );
