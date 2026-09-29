@@ -27,6 +27,16 @@
   --thumb-line: #cdd7e1;
   --thumb-muted: #a3afbc;
   --thumb-accent-soft: #dce7f0;
+
+  /* 홈 히어로 아바타 전용 (src/components/avatar.tsx) */
+  --avatar-bg: #dce7f0;
+  --avatar-hair: #1c2638;
+  --avatar-shirt: #355979;
+  --avatar-collar: #ffffff;
+  --avatar-skin: #f3d6c2;
+  --avatar-neck: #e6c0a7;
+  --avatar-blush: #e8a296;
+  --avatar-mouth: #a8645b;
 }
 
 :root[data-theme="dark"] {
@@ -52,6 +62,16 @@
   --thumb-line: #3b4d60;
   --thumb-muted: #6c7f93;
   --thumb-accent-soft: #2a4560;
+
+  /* 배경을 낮추고 상의를 밝혀 형태가 묻히지 않도록 */
+  --avatar-bg: #223a4f;
+  --avatar-hair: #0b121b;
+  --avatar-shirt: #5b83a8;
+  --avatar-collar: #e9eef3;
+  --avatar-skin: #eccbb5;
+  --avatar-neck: #d6ad93;
+  --avatar-blush: #d98f84;
+  --avatar-mouth: #95564e;
 }
 
 @theme inline {

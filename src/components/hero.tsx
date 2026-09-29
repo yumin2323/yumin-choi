@@ -1,11 +1,12 @@
+import { Avatar } from "@/components/avatar";
 import { COLUMNS, READING, TextLink } from "@/components/section";
 import { profile } from "@/lib/resume";
 
 export function Hero() {
   return (
     <section className={`pt-20 pb-14 sm:pt-32 sm:pb-20 ${COLUMNS}`}>
-      {/* 본문이 다른 구역과 같은 세로선에서 시작하도록 왼쪽 칸은 비워 둠 */}
-      <div aria-hidden="true" />
+      {/* 다른 구역의 섹션 이름 자리. 모바일에서는 제목 위로 올라감 */}
+      <Avatar className="mb-8 size-16 md:mt-1.5 md:mb-0 md:size-28" />
       <div>
         <h1 className="text-[34px] leading-[1.3] font-semibold tracking-[-0.035em] whitespace-pre-line text-heading sm:text-[44px]">
           {profile.headline}
