@@ -1,14 +1,12 @@
+import { SHELL } from "@/components/section";
 import { profile } from "@/lib/resume";
 
 export function SiteFooter() {
   return (
-    <footer className="border-t border-line pt-8 pb-12 text-sm text-muted">
-      <div className="mx-auto flex max-w-[960px] flex-wrap justify-between gap-3">
-        <span>
-          © {new Date().getFullYear()} {profile.name}
-        </span>
-        <span>Next.js와 Tailwind CSS로 만들었어요</span>
-      </div>
+    <footer className="pt-10 pb-14 text-sm text-muted print:hidden">
+      <p className={SHELL}>
+        © {new Date().getFullYear()} {profile.name}
+      </p>
     </footer>
   );
 }

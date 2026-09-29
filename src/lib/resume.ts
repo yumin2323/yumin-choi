@@ -6,53 +6,99 @@ export type Link = { label: string; href: string };
 /** 성과 한 줄. title이 있으면 "제목 — 설명" 형태, details는 하위 목록 */
 export type Highlight = { title?: string; text: string; details?: string[] };
 
-/** 작업 카드의 일러스트 종류 (src/components/work-illustration.tsx) */
-export type IllustrationVariant = "workflow" | "benchmark" | "graph" | "website";
+/** 프로젝트의 대표 성과 하나. 설명 뒤에 이전 값 → 개선된 값으로 보여준다 */
+export type Outcome = { before: string; after: string; caption: string };
 
 export type Work = {
+  /** Resume 페이지의 앵커(/resume#id) */
+  id: string;
   name: string;
+  /** 이름 옆에 붙는 짧은 분류 */
+  category: string;
   period: string;
   url?: string;
   tagline: string;
-  illustration: IllustrationVariant;
+  outcome?: Outcome;
   stack: string[];
   highlights: Highlight[];
-};
-
-export type Story = {
-  title: string;
-  project: string;
-  problem: string;
-  approach: string;
-  result: string;
-  metric: { before: string; after: string; unit: string };
+  /** 관련 블로그 글의 slug (content/blog/<slug>.mdx) */
+  post?: string;
 };
 
 export type TimelineItem = { company: string; period: string; summary: string; current?: boolean };
 
 export type SkillGroup = { title: string; items: string[] };
 
+export type Expertise = { title: string; text: string; items: string[] };
+
+/** 홈의 대표 작업. 프로젝트 이름보다 해결한 문제를 먼저 보여준다 */
+export type SelectedWork = { title: string; text: string; work: Work["id"] };
+
 export const profile = {
   name: "Yumin Choi",
   nameKo: "최유민",
-  role: "프론트엔드 개발자",
-  greeting: "안녕하세요,\n프론트엔드 개발자 최유민입니다.",
-  intro: [
-    "7년 가까이 React와 Next.js로 서비스를 설계하고 만들어 왔어요. 수천 개의 노드가 얽힌 모델 그래프, 편집 가능한 벤치마크 표, 실시간으로 흘러가는 AI 워크플로우처럼 데이터가 많고 복잡한 화면을 빠르고 단단하게 만드는 일을 좋아해요.",
-    "화면만 만들지 않고 배포 설정과 운영, 필요하면 FastAPI 백엔드까지 직접 챙기면서 데이터가 흐르는 길 전체를 보려고 해요.",
-  ],
-  now: { label: "지금", text: "스퀴즈비츠에서 생성형 AI 서비스 Yetter를 만들고 있어요", href: "https://yetter.ai/" },
+  role: "Frontend Developer",
+  headline: "복잡한 데이터를\n빠르고 단단한 화면으로.",
+  /** 히어로의 한 줄 소개. 자세한 설명은 about에서 */
+  intro: "React와 Next.js로 복잡한 데이터 화면을 만드는 프론트엔드 개발자 최유민입니다.",
+  /** 히어로의 지금 하는 일 한 줄 */
+  now: { text: "지금은 스퀴즈비츠에서 Yetter를 만들고 있습니다", href: "https://yetter.ai/" },
+  /** 홈에 보이는 주요 기술. 전체 목록은 skills */
+  coreStack: ["Next.js", "TypeScript", "TanStack Query", "Zustand"],
   email: "cym6749@gmail.com",
   links: [{ label: "GitHub", href: "https://github.com/yumin2323" }] satisfies Link[],
 };
 
+export const about = [
+  "7년 가까이 복잡한 데이터와 인터랙션을 다뤄 온 프론트엔드 개발자입니다. AI 워크플로우, 수천 개 노드의 모델 그래프, 스프레드시트형 편집 화면처럼 구현 난도가 높은 인터페이스를 주로 만들어 왔습니다.",
+  "화면이 느려지면 렌더링 병목과 상태 구조까지 원인을 따라가고, 같은 작업이 반복되면 그 작업이 필요 없는 구조를 만듭니다. 작은 팀에서 API와 배포, 모니터링까지 직접 맡아 왔기 때문에 화면을 제품 전체의 흐름 안에서 봅니다.",
+];
+
+export const expertise: Expertise[] = [
+  {
+    title: "복잡한 UI 설계",
+    text: "상태와 인터랙션이 얽힌 화면을 다루기 쉬운 구조로 나눕니다.",
+    items: ["대규모 그래프", "워크플로우 에디터", "데이터 그리드", "다단계 설정 화면"],
+  },
+  {
+    title: "성능과 구조 개선",
+    text: "느린 화면의 원인을 측정으로 찾고, 데이터가 흐르는 길을 정리합니다.",
+    items: ["렌더링 병목 분석", "상태 관리 구조 개선", "실시간 이벤트 처리", "데이터 흐름 최적화"],
+  },
+  {
+    title: "제품 전체를 보는 개발",
+    text: "화면에서 그치지 않고 서비스가 운영되는 전 과정을 함께 봅니다.",
+    items: ["프론트엔드 구현", "API 설계와 연동", "배포와 운영", "모니터링"],
+  },
+];
+
+export const selectedWork: SelectedWork[] = [
+  {
+    title: "대규모 데이터를 빠르게 그립니다",
+    text: "4,000개가 넘는 노드를 처리하는 모델 그래프의 렌더링 시간을 172.64초에서 18.85초로 줄였습니다.",
+    work: "owlite",
+  },
+  {
+    title: "반복 작업을 없애는 구조를 만듭니다",
+    text: "OpenAPI 스키마로 입력 화면을 자동 생성해, 신규 모델을 추가할 때마다 들던 2~3시간의 프론트엔드 작업을 없앴습니다.",
+    work: "yetter",
+  },
+  {
+    title: "스프레드시트 수준의 편집을 직접 구현합니다",
+    text: "AG Grid Community 버전 위에 범위 선택, 필 핸들, Excel 호환 붙여넣기, Undo를 만들고 모든 셀 변경을 하나의 처리 구조로 모았습니다.",
+    work: "fitsonchips",
+  },
+];
+
 export const works: Work[] = [
   {
+    id: "yetter",
     name: "Yetter",
+    category: "생성형 AI 플랫폼",
     period: "2025 – 현재",
     url: "https://yetter.ai/",
-    tagline: "노드를 이어 이미지와 비디오를 생성하는 AI 서비스. 프론트엔드를 처음부터 설계했어요.",
-    illustration: "workflow",
+    tagline: "노드를 이어 이미지와 비디오를 생성하는 AI 서비스입니다. 프론트엔드를 처음부터 설계했습니다.",
+    outcome: { before: "2–3시간", after: "0시간", caption: "신규 모델 추가 시 반복되던 프론트엔드 작업 제거" },
     stack: ["Next.js", "TypeScript", "TanStack Query", "Zustand", "Tailwind CSS", "Radix UI", "Sentry"],
     highlights: [
       {
@@ -72,12 +118,15 @@ export const works: Work[] = [
         text: "디자인 토큰, 공통 컴포넌트, Storybook, Sentry 환경을 구축해 UI 일관성과 운영 안정성 향상",
       },
     ],
+    post: "openapi-dynamic-form",
   },
   {
+    id: "owlite",
     name: "Owlite",
+    category: "모델 분석 도구",
     period: "2022 – 2025",
-    tagline: "딥러닝 모델의 구조를 그래프로 탐색하고 양자화 설정을 다루는 모델 분석 서비스",
-    illustration: "graph",
+    tagline: "딥러닝 모델의 구조를 그래프로 탐색하고 양자화 설정을 다루는 모델 분석 서비스입니다.",
+    outcome: { before: "172.64초", after: "18.85초", caption: "대규모 모델 그래프 렌더링 시간 89% 단축" },
     stack: ["React", "SVG", "Redux", "Emotion", "MUI"],
     highlights: [
       {
@@ -97,13 +146,15 @@ export const works: Work[] = [
         ],
       },
     ],
+    post: "model-graph-rendering",
   },
   {
+    id: "fitsonchips",
     name: "FitsOnChips",
+    category: "LLM 벤치마크",
     period: "2023 – 2025",
-    tagline: "LLM 벤치마크를 돌리고 모델·하드웨어별 성능을 비교하는 서비스",
-    illustration: "benchmark",
-    stack: ["React", "Redux", "AG Grid", "Nivo", "Emotion", "MUI"],
+    tagline: "LLM 벤치마크를 실행하고 모델·하드웨어별 성능을 비교하는 서비스입니다.",
+    stack: ["AG Grid", "Nivo", "React", "Redux", "Emotion", "MUI"],
     highlights: [
       {
         title: "AG Grid 기반 스프레드시트 편집 기능 구현",
@@ -121,10 +172,12 @@ export const works: Work[] = [
     ],
   },
   {
+    id: "squeezebits-web",
     name: "스퀴즈비츠 공식 웹사이트",
+    category: "회사 웹사이트",
     period: "2025 – 2026",
-    tagline: "프론트엔드부터 FastAPI·MongoDB 백엔드, 배포 설정까지 혼자 만든 회사 웹사이트",
-    illustration: "website",
+    tagline: "프론트엔드부터 FastAPI·MongoDB 백엔드, 배포 설정까지 혼자 만든 회사 웹사이트입니다.",
+    outcome: { before: "2.06MB", after: "53KB", caption: "초기 폰트 다운로드 97% 축소" },
     stack: ["Next.js", "FastAPI", "MongoDB", "Docker", "Jenkins", "AWS", "GA4/GTM"],
     highlights: [
       {
@@ -144,36 +197,7 @@ export const works: Work[] = [
         text: "서브셋 분리와 unicode-range, 로케일별 동적 import로 초기 폰트 다운로드를 **2.06MB에서 53KB로 97% 축소**",
       },
     ],
-  },
-];
-
-export const stories: Story[] = [
-  {
-    title: "3분 가까이 걸리던 그래프를 19초로",
-    project: "Owlite",
-    problem:
-      "SVG와 HTML DOM을 섞어 그리는 모델 그래프 뷰어가 노드 4,000개가 넘는 대규모 모델 앞에서 몇 분씩 멈춰 있었어요.",
-    approach:
-      "그래프 규모에 따라 레이아웃 알고리즘을 나눠 쓰고, O(n²) 배열 탐색과 재귀 처리처럼 시간을 잡아먹던 병목을 하나씩 걷어냈어요.",
-    result: "Stable Diffusion UNet XL 기준 렌더링 시간이 89% 줄었어요.",
-    metric: { before: "172.64", after: "18.85", unit: "초" },
-  },
-  {
-    title: "첫 화면 폰트를 53KB로",
-    project: "스퀴즈비츠 공식 웹사이트",
-    problem: "한국어·일본어·영문을 모두 지원하느라 첫 화면을 그리기 전에 받아야 하는 폰트가 2MB를 넘었어요.",
-    approach:
-      "폰트를 latin·korean·japanese 서브셋으로 나누고, unicode-range와 로케일별 동적 import로 필요한 글자만 받도록 바꿨어요.",
-    result: "초기 폰트 다운로드가 97% 줄었고, 저장소의 폰트 자산도 14.3MB에서 6.8MB로 가벼워졌어요.",
-    metric: { before: "2.06MB", after: "53KB", unit: "" },
-  },
-  {
-    title: "새 모델이 올 때마다 하던 화면 작업을 없애기",
-    project: "Yetter",
-    problem: "AI 모델이 추가될 때마다 입력 폼을 손으로 만드느라 모델 하나에 2~3시간씩 프론트엔드 작업이 필요했어요.",
-    approach: "모델의 OpenAPI 입력 스키마를 해석해서 폼과 중첩 데이터 구조를 자동으로 구성하게 만들었어요.",
-    result: "이제 새 모델이 추가돼도 입력 화면은 코드 수정 없이 바로 생겨요.",
-    metric: { before: "2~3", after: "0", unit: "시간" },
+    post: "font-subsetting",
   },
 ];
 
@@ -181,16 +205,16 @@ export const timeline: TimelineItem[] = [
   {
     company: "스퀴즈비츠",
     period: "2022.10 – 현재",
-    summary: "Owlite, FitsOnChips, Yetter, 공식 웹사이트의 프론트엔드를 맡고 있어요.",
+    summary: "Owlite, FitsOnChips, Yetter, 공식 웹사이트의 프론트엔드를 담당하고 있습니다.",
     current: true,
   },
-  { company: "데이터메이커", period: "2022.05 – 2022.09", summary: "Vue로 데이터 라벨링 현황 대시보드와 교육용 튜토리얼 사이트를 만들었어요." },
+  { company: "데이터메이커", period: "2022.05 – 2022.09", summary: "Vue로 데이터 라벨링 현황 대시보드와 교육용 튜토리얼 사이트를 만들었습니다." },
   {
     company: "위피엔피",
     period: "2020.09 – 2022.01",
-    summary: "인쇄물 자동 견적 시스템, 생산 관리 MES, Adobe CEP 플러그인을 React와 PHP로 만들었어요.",
+    summary: "인쇄물 자동 견적 시스템, 생산 관리 MES, Adobe CEP 플러그인을 React와 PHP로 개발했습니다.",
   },
-  { company: "메타빌드", period: "2017.02 – 2018.05", summary: "식약처·공정위 정부과제에서 기관 간 데이터 연계 시스템 화면을 만들었어요." },
+  { company: "메타빌드", period: "2017.02 – 2018.05", summary: "식약처·공정위 정부과제에서 기관 간 데이터 연계 시스템의 화면을 개발했습니다." },
 ];
 
 export const education = ["건양대학교 융합IT학부(ICT전공) 졸업", "정보처리기사 · SQLD · 리눅스마스터 2급"];
@@ -202,3 +226,9 @@ export const skills: SkillGroup[] = [
   { title: "백엔드와 운영", items: ["FastAPI", "MongoDB", "MySQL", "Docker", "Jenkins", "AWS", "Sentry", "GA4/GTM"] },
   { title: "함께 일하는", items: ["GitHub", "Claude", "Cursor AI"] },
 ];
+
+export function findWork(id: Work["id"]) {
+  const work = works.find((item) => item.id === id);
+  if (!work) throw new Error(`알 수 없는 작업: ${id}`);
+  return work;
+}

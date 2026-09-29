@@ -6,52 +6,57 @@
 :root {
   color-scheme: light;
   --background: #ffffff;
-  --soft: #f4f3f8;
-  --line: #e7e5ee;
-  --heading: #1d1b26;
-  --body: #3a3746;
-  --sub: #575366;
-  --muted: #736f82;
-  --accent: #6d5bd0;
-  --accent-soft: #efecfb;
+  --surface: #ffffff;
+  --soft: #eaf0f5;
+  --line: #d8e0e8;
+  --heading: #172033;
+  --body: #344054;
+  --sub: #667085;
+  --muted: #7a8494;
+  --accent: #355979;
+  --accent-hover: #294762;
+  --accent-soft: #dce7f0;
+  /* 골드는 번호·화살표·밑줄 같은 작은 강조에만 */
+  --gold: #b9955a;
+  --focus: #91afc8;
+  --green: #3f8a6a;
 
-  /* 카드와 일러스트 */
-  --card: #ffffff;
-  --ill-line: #d9d6e3;
-  --tint-violet: #ece8fb;
-  --tint-green: #e4f4ec;
-  --tint-orange: #ffeee3;
-  --green: #2fa36b;
-  --orange: #ee8434;
-  --ill-shadow: 0 1cqw 4cqw rgb(60 40 120 / 0.12);
-  --stack-shadow: 0 24px 60px rgb(60 40 120 / 0.18);
+  /* 블로그 썸네일 전용 (docs/blog-thumbnail-guide.md) */
+  --thumb-bg: #edf2f6;
+  --thumb-surface: #ffffff;
+  --thumb-line: #cdd7e1;
+  --thumb-muted: #a3afbc;
+  --thumb-accent-soft: #dce7f0;
 }
 
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --background: #18171d;
-  --soft: #232129;
-  --line: #2f2d37;
-  --heading: #f3f2f7;
-  --body: #d4d1dc;
-  --sub: #b3afbf;
-  --muted: #8a8698;
-  --accent: #a496f0;
-  --accent-soft: #2a2544;
+  --background: #0e1721;
+  --surface: #162230;
+  --soft: #1d2b3a;
+  --line: #2b3a49;
+  --heading: #f3f6f9;
+  --body: #d3dbe3;
+  --sub: #a8b4c1;
+  --muted: #8593a2;
+  --accent: #7fa2c1;
+  --accent-hover: #96b4cf;
+  --accent-soft: #223a4f;
+  --gold: #d0ae72;
+  --focus: #7fa2c1;
+  --green: #6fbf9a;
 
-  --card: #2b2934;
-  --ill-line: #4a4656;
-  --tint-violet: #241f3d;
-  --tint-green: #182c22;
-  --tint-orange: #33251a;
-  --green: #4cc38a;
-  --orange: #f5a15f;
-  --ill-shadow: 0 1cqw 4cqw rgb(0 0 0 / 0.35);
-  --stack-shadow: 0 24px 60px rgb(0 0 0 / 0.45);
+  /* 다크에서는 칸이 배경보다 밝게 떠 보이고, 선이 묻히지 않도록 명도를 올림 */
+  --thumb-bg: #18232f;
+  --thumb-surface: #223142;
+  --thumb-line: #3b4d60;
+  --thumb-muted: #6c7f93;
+  --thumb-accent-soft: #2a4560;
 }
 
 @theme inline {
   --color-background: var(--background);
+  --color-surface: var(--surface);
   --color-soft: var(--soft);
   --color-line: var(--line);
   --color-heading: var(--heading);
@@ -59,16 +64,34 @@
   --color-sub: var(--sub);
   --color-muted: var(--muted);
   --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
   --color-accent-soft: var(--accent-soft);
-  --color-tint-violet: var(--tint-violet);
+  --color-gold: var(--gold);
 
-  --font-sans: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", "Segoe UI", sans-serif;
+  --font-sans: var(--font-plex), -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", "Segoe UI", sans-serif;
   --font-mono: SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+/* hover 시 왼쪽부터 그어지는 골드 밑줄 */
+@utility link-underline {
+  background-image: linear-gradient(var(--gold), var(--gold));
+  background-position: 0 100%;
+  background-repeat: no-repeat;
+  background-size: 0 1px;
+  transition: background-size 0.25s ease;
+
+  &:hover {
+    background-size: 100% 1px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
 }
 
 @layer base {
   :focus-visible {
-    outline: 2px solid var(--accent);
+    outline: 2px solid var(--focus);
     outline-offset: 3px;
     border-radius: 6px;
   }
