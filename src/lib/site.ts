@@ -8,5 +8,4 @@ export const sections = [
   { id: "works", label: "작업" },
   { id: "stories", label: "이야기" },
   { id: "journey", label: "걸어온 길" },
-  { id: "contact", label: "연락" },
 ] as const;

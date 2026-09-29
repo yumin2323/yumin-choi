@@ -5,7 +5,7 @@
 
 :root {
   color-scheme: light;
-  --background: #f6f8fa;
+  --background: #ffffff;
   --surface: #ffffff;
   --soft: #eaf0f5;
   --line: #d8e0e8;
@@ -54,7 +54,7 @@
   --color-accent-soft: var(--accent-soft);
   --color-gold: var(--gold);
 
-  --font-sans: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", "Segoe UI", sans-serif;
+  --font-sans: var(--font-plex), -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", "Segoe UI", sans-serif;
   --font-mono: SFMono-Regular, Menlo, Consolas, monospace;
 }
 
@@ -73,15 +73,6 @@
   @media (prefers-reduced-motion: reduce) {
     transition: none;
   }
-}
-
-/* 영문 섹션 레이블, 메타 정보 */
-@utility eyebrow {
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--muted);
 }
 
 @layer base {

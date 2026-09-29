@@ -6,12 +6,12 @@ export type Link = { label: string; href: string };
 /** 성과 한 줄. title이 있으면 "제목 — 설명" 형태, details는 하위 목록 */
 export type Highlight = { title?: string; text: string; details?: string[] };
 
-/** 프로젝트의 대표 성과 하나. before → after로 크게 보여준다 */
+/** 프로젝트의 대표 성과 하나. 설명 뒤에 이전 값 → 개선된 값으로 보여준다 */
 export type Outcome = { before: string; after: string; caption: string };
 
 export type Work = {
   name: string;
-  /** 이름 위에 붙는 영문 분류 */
+  /** 이름 옆에 붙는 짧은 분류 */
   category: string;
   period: string;
   url?: string;
@@ -44,13 +44,8 @@ export const profile = {
     "7년 가까이 프론트엔드 개발자로 일하며, React와 Next.js를 중심으로 서비스를 설계하고 만들어 왔습니다. 수천 개의 노드가 얽힌 모델 그래프, 편집 가능한 벤치마크 표, 실시간 AI 워크플로우처럼 데이터가 많고 복잡한 화면을 다룹니다.",
     "화면에서 그치지 않고 배포 설정과 운영, 필요하면 FastAPI 백엔드까지 직접 맡아 데이터가 흐르는 길 전체를 봅니다.",
   ],
-  /** 히어로 오른쪽의 짧은 소개. href가 있으면 링크 */
-  facts: [
-    { label: "Role", value: "Frontend Engineer" },
-    { label: "Experience", value: "7 yrs" },
-    { label: "Stack", value: "React · Next.js · TypeScript" },
-    { label: "Now", value: "Yetter at 스퀴즈비츠", href: "https://yetter.ai/" },
-  ] as { label: string; value: string; href?: string }[],
+  /** 히어로의 지금 하는 일 한 줄 */
+  now: { text: "지금은 스퀴즈비츠에서 Yetter를 만들고 있습니다", href: "https://yetter.ai/" },
   email: "cym6749@gmail.com",
   links: [{ label: "GitHub", href: "https://github.com/yumin2323" }] satisfies Link[],
 };
@@ -58,11 +53,11 @@ export const profile = {
 export const works: Work[] = [
   {
     name: "Yetter",
-    category: "Generative AI Platform",
+    category: "생성형 AI 플랫폼",
     period: "2025 – 현재",
     url: "https://yetter.ai/",
     tagline: "노드를 이어 이미지와 비디오를 생성하는 AI 서비스입니다. 프론트엔드를 처음부터 설계했습니다.",
-    outcome: { before: "2–3h", after: "0h", caption: "신규 모델 추가 시 반복되던 프론트엔드 작업 제거" },
+    outcome: { before: "2–3시간", after: "0시간", caption: "신규 모델 추가 시 반복되던 프론트엔드 작업 제거" },
     stack: ["Next.js", "TypeScript", "TanStack Query", "Zustand", "Tailwind CSS", "Radix UI", "Sentry"],
     highlights: [
       {
@@ -85,10 +80,10 @@ export const works: Work[] = [
   },
   {
     name: "Owlite",
-    category: "Model Analysis Tool",
+    category: "모델 분석 도구",
     period: "2022 – 2025",
     tagline: "딥러닝 모델의 구조를 그래프로 탐색하고 양자화 설정을 다루는 모델 분석 서비스입니다.",
-    outcome: { before: "172.64s", after: "18.85s", caption: "대규모 모델 그래프 렌더링 시간 89% 단축" },
+    outcome: { before: "172.64초", after: "18.85초", caption: "대규모 모델 그래프 렌더링 시간 89% 단축" },
     stack: ["React", "SVG", "Redux", "Emotion", "MUI"],
     highlights: [
       {
@@ -111,7 +106,7 @@ export const works: Work[] = [
   },
   {
     name: "FitsOnChips",
-    category: "LLM Benchmarking",
+    category: "LLM 벤치마크",
     period: "2023 – 2025",
     tagline: "LLM 벤치마크를 실행하고 모델·하드웨어별 성능을 비교하는 서비스입니다.",
     stack: ["AG Grid", "Nivo", "React", "Redux", "Emotion", "MUI"],
@@ -133,7 +128,7 @@ export const works: Work[] = [
   },
   {
     name: "스퀴즈비츠 공식 웹사이트",
-    category: "Company Website",
+    category: "회사 웹사이트",
     period: "2025 – 2026",
     tagline: "프론트엔드부터 FastAPI·MongoDB 백엔드, 배포 설정까지 혼자 만든 회사 웹사이트입니다.",
     outcome: { before: "2.06MB", after: "53KB", caption: "초기 폰트 다운로드 97% 축소" },
