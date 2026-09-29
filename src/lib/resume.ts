@@ -80,7 +80,7 @@ export const selectedWork: SelectedWork[] = [
   },
   {
     title: "반복 작업을 없애는 구조를 만듭니다",
-    text: "OpenAPI 스키마로 입력 화면을 자동 생성해, 신규 모델을 추가할 때마다 들던 2~3시간의 프론트엔드 작업을 없앴습니다.",
+    text: "OpenAPI 스키마로 입력 화면을 자동 생성해, 모델 추가 비용이 모델 수가 아닌 입력 타입 종류 수에 비례하도록 바꿨습니다. 도입 후 5개월간 새 모델은 스키마만으로 폼이 만들어졌습니다.",
     work: "yetter",
   },
   {
@@ -98,7 +98,7 @@ export const works: Work[] = [
     period: "2025 – 현재",
     url: "https://yetter.ai/",
     tagline: "노드를 이어 이미지와 비디오를 생성하는 AI 서비스입니다. 프론트엔드를 처음부터 설계했습니다.",
-    outcome: { before: "2–3시간", after: "0시간", caption: "신규 모델 추가 시 반복되던 프론트엔드 작업 제거" },
+    outcome: { before: "모델 수", after: "입력 타입 수", caption: "모델 추가 비용이 비례하는 기준 전환" },
     stack: ["Next.js", "TypeScript", "TanStack Query", "Zustand", "Tailwind CSS", "Radix UI", "Sentry"],
     highlights: [
       {
@@ -111,7 +111,8 @@ export const works: Work[] = [
       },
       {
         title: "OpenAPI 기반 모델 입력 화면 자동 생성",
-        text: "모델별 입력 스키마를 해석해 폼과 중첩 데이터를 자동 구성하고, 신규 모델 추가 시 약 2~3시간 소요되던 프론트엔드 작업 제거",
+        text: "모델별 입력 스키마를 해석해 폼과 중첩 데이터를 자동 구성하고, 모델 추가 비용을 **모델 수가 아닌 입력 타입 종류 수에 비례**하도록 전환",
+        details: ["도입 후 5개월간 입력 타입과 위젯 추가 없이, 새로 들어온 모델은 스키마만으로 폼 생성"],
       },
       {
         title: "디자인 시스템·운영 기반 구축",
