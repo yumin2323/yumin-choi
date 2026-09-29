@@ -1,137 +1,103 @@
 import { Hero } from "@/components/hero";
-import { Highlights, Section, TextLink } from "@/components/section";
-import { education, skills, stories, timeline, works, type Work } from "@/lib/resume";
+import { ArrowLink, Num, READING, SHELL, Section, TextLink } from "@/components/section";
+import { formatDate, getPosts } from "@/lib/blog";
+import { about, expertise, findWork, profile, selectedWork } from "@/lib/resume";
 
-export default function HomePage() {
+export default async function HomePage() {
+  const posts = (await getPosts()).filter((post) => post.featured).slice(0, 3);
+
   return (
-    <div className="mx-auto max-w-[760px]">
+    <div className={SHELL}>
       <Hero />
 
-      <Section id="works" title="작업">
-        <ul className="space-y-14">
-          {works.map((work) => (
-            <li key={work.name}>
-              <WorkItem work={work} />
-            </li>
+      <Section id="about" title="소개">
+        <div className={`space-y-5 text-[17px] leading-[1.85] text-body ${READING}`}>
+          {about.map((line) => (
+            <p key={line}>{line}</p>
           ))}
-        </ul>
+        </div>
       </Section>
 
-      <Section id="stories" title="이야기">
-        <ul className="space-y-14">
-          {stories.map((story) => (
-            <li key={story.title}>
-              <p className="text-sm text-muted">{story.project}</p>
-              <h3 className="mt-1 text-[18px] leading-[1.5] font-semibold tracking-[-0.02em] text-balance text-heading">
-                {story.title}
-              </h3>
-              <dl className="mt-4 space-y-2.5 text-[15px] leading-[1.8]">
-                {(
-                  [
-                    ["문제", story.problem],
-                    ["해결", story.approach],
-                    ["결과", story.result],
-                  ] as const
-                ).map(([label, text]) => (
-                  <div key={label} className="grid grid-cols-[40px_minmax(0,1fr)] gap-2">
-                    <dt className="text-muted">{label}</dt>
-                    <dd className="text-sub">{text}</dd>
-                  </div>
+      <Section id="expertise" title="잘하는 일">
+        <ol className="grid gap-10 sm:grid-cols-3 sm:gap-8">
+          {expertise.map((item, i) => (
+            <li key={item.title}>
+              <p className="text-sm">
+                <Num n={i + 1} />
+              </p>
+              <h3 className="mt-2 text-[17px] font-semibold tracking-[-0.02em] text-heading">{item.title}</h3>
+              <p className="mt-2 text-[15px] leading-[1.75] text-sub">{item.text}</p>
+              <ul className="mt-4 space-y-1 border-t border-line pt-4 text-sm leading-[1.7] text-muted">
+                {item.items.map((line) => (
+                  <li key={line}>{line}</li>
                 ))}
-              </dl>
+              </ul>
+            </li>
+          ))}
+        </ol>
+      </Section>
+
+      <Section id="work" title="대표 작업">
+        <ol className="space-y-12">
+          {selectedWork.map((item) => {
+            const work = findWork(item.work);
+            return (
+              <li key={item.title} className={READING}>
+                <h3 className="text-[21px] leading-[1.45] font-semibold tracking-[-0.025em] text-balance text-heading">
+                  {item.title}
+                </h3>
+                <p className="mt-3 text-[15px] leading-[1.8] text-sub">{item.text}</p>
+                <p className="mt-3 text-sm text-muted">
+                  {work.name} · {work.category}
+                </p>
+                <p className="mt-3 flex flex-wrap gap-x-6 gap-y-1">
+                  <ArrowLink href={`/resume#${work.id}`}>경력에서 보기</ArrowLink>
+                  {work.post && <ArrowLink href={`/blog/${work.post}`}>관련 글</ArrowLink>}
+                </p>
+              </li>
+            );
+          })}
+        </ol>
+      </Section>
+
+      <Section id="writing" title="대표 글">
+        <ul className="space-y-8">
+          {posts.map((post) => (
+            <li key={post.slug} className={READING}>
+              <h3 className="text-[17px] leading-[1.5] font-semibold tracking-[-0.02em] text-heading">
+                <TextLink href={`/blog/${post.slug}`}>{post.title}</TextLink>
+              </h3>
+              <p className="mt-2 text-[15px] leading-[1.75] text-sub">{post.description}</p>
+              <p className="mt-1.5 text-sm text-muted tabular-nums">
+                <time dateTime={post.date}>{formatDate(post.date)}</time>
+              </p>
             </li>
           ))}
         </ul>
+        <p className="mt-10">
+          <ArrowLink href="/blog">모든 글 보기</ArrowLink>
+        </p>
       </Section>
 
-      <Section id="journey" title="걸어온 길">
-        <ol className="space-y-8 border-l border-line pl-6">
-          {timeline.map((item) => (
-            <li key={item.company} className="relative">
-              <TreeDot current={item.current} />
-              <p className="text-sm text-muted tabular-nums">{item.period}</p>
-              <h3 className="mt-0.5 flex items-baseline gap-2 text-[17px] font-semibold tracking-[-0.02em] text-heading">
-                {item.company}
-                {item.current && <span className="text-[13px] font-normal tracking-normal text-accent">재직 중</span>}
-              </h3>
-              <p className="mt-1 text-[15px] leading-[1.75] text-sub">{item.summary}</p>
-            </li>
-          ))}
-          <li className="relative">
-            <TreeDot />
-            <h3 className="text-[15px] font-semibold text-heading">그 전에는</h3>
-            <ul className="mt-1 text-[15px] leading-[1.75] text-sub">
-              {education.map((item) => (
-                <li key={item}>{item}</li>
-              ))}
-            </ul>
-          </li>
-        </ol>
-
-        <h3 className="mt-16 text-[15px] font-semibold text-heading">손에 익은 도구</h3>
-        <dl className="mt-4 space-y-2 text-[15px] leading-[1.75]">
-          {skills.map((group) => (
-            <div key={group.title} className="sm:grid sm:grid-cols-[120px_minmax(0,1fr)] sm:gap-4">
-              <dt className="text-muted">{group.title}</dt>
-              <dd className="text-sub">{group.items.join(", ")}</dd>
+      <Section id="contact" title="연락처">
+        <p className="mb-6 text-[15px] leading-[1.8] text-sub">함께 일하거나 이야기를 나누고 싶다면 편하게 연락 주세요.</p>
+        <dl className="space-y-2 text-[15px]">
+          {(
+            [
+              ["Email", `mailto:${profile.email}`, profile.email],
+              ...profile.links.map(({ label, href }) => [label, href, href.replace(/^https?:\/\//, "")]),
+              ["Resume", "/resume", "경력 자세히 보기"],
+            ] as const
+          ).map(([label, href, text]) => (
+            <div key={label} className="grid grid-cols-[80px_minmax(0,1fr)] gap-4">
+              <dt className="text-muted">{label}</dt>
+              <dd>
+                <TextLink href={href}>{text}</TextLink>
+              </dd>
             </div>
           ))}
         </dl>
       </Section>
     </div>
-  );
-}
-
-function WorkItem({ work }: { work: Work }) {
-  return (
-    <article>
-      <div className="flex flex-wrap items-baseline justify-between gap-x-4">
-        <h3 className="text-[18px] font-semibold tracking-[-0.02em] text-heading">
-          {work.url ? <TextLink href={work.url}>{work.name}</TextLink> : work.name}
-        </h3>
-        <p className="text-sm text-muted tabular-nums">{work.period}</p>
-      </div>
-      <p className="mt-0.5 text-sm text-muted">{work.category}</p>
-      <p className="mt-3 text-[15px] leading-[1.8] text-sub">{work.tagline}</p>
-      {work.outcome && (
-        <p className="mt-2 text-[15px] leading-[1.8] text-sub">
-          {work.outcome.caption}
-          <span className="ml-2 font-semibold whitespace-nowrap text-heading tabular-nums">
-            {work.outcome.before} → {work.outcome.after}
-          </span>
-        </p>
-      )}
-
-      <details className="group mt-3">
-        <summary className="inline-flex cursor-pointer list-none items-center gap-1 text-sm text-accent hover:text-accent-hover [&::-webkit-details-marker]:hidden">
-          <span className="group-open:hidden">자세히 보기</span>
-          <span className="hidden group-open:inline">접기</span>
-          <svg
-            viewBox="0 0 16 16"
-            className="size-3.5 transition-transform group-open:rotate-180"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.6"
-            aria-hidden="true"
-          >
-            <path d="m4 6 4 4 4-4" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </summary>
-        <div className="mt-5 space-y-5">
-          <Highlights items={work.highlights} />
-          <p className="text-[13px] leading-[1.7] text-muted">{work.stack.join(", ")}</p>
-        </div>
-      </details>
-    </article>
-  );
-}
-
-/** 걸어온 길 세로선 위의 점. 지금 다니는 곳만 강조 */
-function TreeDot({ current }: { current?: boolean }) {
-  return (
-    <span
-      aria-hidden="true"
-      className={`absolute top-[7px] -left-[29px] size-[9px] rounded-full border-2 border-background ${current ? "bg-accent" : "bg-line"}`}
-    />
   );
 }

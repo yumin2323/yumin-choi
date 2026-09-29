@@ -10,6 +10,8 @@ export type Highlight = { title?: string; text: string; details?: string[] };
 export type Outcome = { before: string; after: string; caption: string };
 
 export type Work = {
+  /** Resume 페이지의 앵커(/resume#id) */
+  id: string;
   name: string;
   /** 이름 옆에 붙는 짧은 분류 */
   category: string;
@@ -17,41 +19,82 @@ export type Work = {
   url?: string;
   tagline: string;
   outcome?: Outcome;
-  /** 앞의 3개만 목록에 보이고, 전체는 펼침 영역에 보인다 */
   stack: string[];
   highlights: Highlight[];
-};
-
-export type Story = {
-  title: string;
-  project: string;
-  problem: string;
-  approach: string;
-  result: string;
+  /** 관련 블로그 글의 slug (content/blog/<slug>.mdx) */
+  post?: string;
 };
 
 export type TimelineItem = { company: string; period: string; summary: string; current?: boolean };
 
 export type SkillGroup = { title: string; items: string[] };
 
+export type Expertise = { title: string; text: string; items: string[] };
+
+/** 홈의 대표 작업. 프로젝트 이름보다 해결한 문제를 먼저 보여준다 */
+export type SelectedWork = { title: string; text: string; work: Work["id"] };
+
 export const profile = {
   name: "Yumin Choi",
   nameKo: "최유민",
-  role: "프론트엔드 개발자",
-  greeting: "안녕하세요, 프론트엔드 개발자 최유민입니다.",
+  role: "Frontend Developer",
   headline: "복잡한 데이터를\n빠르고 단단한 화면으로.",
   intro: [
-    "7년 가까이 프론트엔드 개발자로 일하며, React와 Next.js를 중심으로 서비스를 설계하고 만들어 왔습니다. 수천 개의 노드가 얽힌 모델 그래프, 편집 가능한 벤치마크 표, 실시간 AI 워크플로우처럼 데이터가 많고 복잡한 화면을 다룹니다.",
-    "화면에서 그치지 않고 배포 설정과 운영, 필요하면 FastAPI 백엔드까지 직접 맡아 데이터가 흐르는 길 전체를 봅니다.",
+    "React와 Next.js를 중심으로 7년 가까이 프론트엔드를 만들어 온 최유민입니다.",
+    "AI 워크플로우, 모델 그래프, 데이터 그리드처럼 복잡한 화면을 주로 다루고, 필요하면 API와 배포, 모니터링까지 이어서 봅니다.",
   ],
   /** 히어로의 지금 하는 일 한 줄 */
   now: { text: "지금은 스퀴즈비츠에서 Yetter를 만들고 있습니다", href: "https://yetter.ai/" },
+  /** 홈에 보이는 주요 기술. 전체 목록은 skills */
+  coreStack: ["Next.js", "TypeScript", "TanStack Query", "Zustand"],
   email: "cym6749@gmail.com",
   links: [{ label: "GitHub", href: "https://github.com/yumin2323" }] satisfies Link[],
 };
 
+export const about = [
+  "복잡한 데이터와 인터랙션을 다루는 프론트엔드 개발자입니다. AI 워크플로우, 수천 개 노드의 모델 그래프, 스프레드시트형 편집 화면처럼 구현 난도가 높은 인터페이스를 주로 만들어 왔습니다.",
+  "화면이 느려지면 렌더링 병목과 상태 구조까지 원인을 따라가고, 같은 작업이 반복되면 그 작업이 필요 없는 구조를 만듭니다. 작은 팀에서 백엔드와 배포, 운영까지 직접 맡아 왔기 때문에 화면을 제품 전체의 흐름 안에서 봅니다.",
+];
+
+export const expertise: Expertise[] = [
+  {
+    title: "복잡한 UI 설계",
+    text: "상태와 인터랙션이 얽힌 화면을 다루기 쉬운 구조로 나눕니다.",
+    items: ["대규모 그래프", "워크플로우 에디터", "데이터 그리드", "다단계 설정 화면"],
+  },
+  {
+    title: "성능과 구조 개선",
+    text: "느린 화면의 원인을 측정으로 찾고, 데이터가 흐르는 길을 정리합니다.",
+    items: ["렌더링 병목 분석", "상태 관리 구조 개선", "실시간 이벤트 처리", "데이터 흐름 최적화"],
+  },
+  {
+    title: "제품 전체를 보는 개발",
+    text: "화면에서 그치지 않고 서비스가 운영되는 전 과정을 함께 봅니다.",
+    items: ["프론트엔드 구현", "API 설계와 연동", "배포와 운영", "모니터링"],
+  },
+];
+
+export const selectedWork: SelectedWork[] = [
+  {
+    title: "대규모 데이터를 빠르게 그립니다",
+    text: "4,000개가 넘는 노드를 처리하는 모델 그래프의 렌더링 시간을 172.64초에서 18.85초로 줄였습니다.",
+    work: "owlite",
+  },
+  {
+    title: "반복 작업을 없애는 구조를 만듭니다",
+    text: "OpenAPI 스키마로 입력 화면을 자동 생성해, 신규 모델을 추가할 때마다 들던 2~3시간의 프론트엔드 작업을 없앴습니다.",
+    work: "yetter",
+  },
+  {
+    title: "스프레드시트 수준의 편집을 직접 구현합니다",
+    text: "AG Grid Community 버전 위에 범위 선택, 필 핸들, Excel 호환 붙여넣기, Undo를 만들고 모든 셀 변경을 하나의 처리 구조로 모았습니다.",
+    work: "fitsonchips",
+  },
+];
+
 export const works: Work[] = [
   {
+    id: "yetter",
     name: "Yetter",
     category: "생성형 AI 플랫폼",
     period: "2025 – 현재",
@@ -77,8 +120,10 @@ export const works: Work[] = [
         text: "디자인 토큰, 공통 컴포넌트, Storybook, Sentry 환경을 구축해 UI 일관성과 운영 안정성 향상",
       },
     ],
+    post: "openapi-dynamic-form",
   },
   {
+    id: "owlite",
     name: "Owlite",
     category: "모델 분석 도구",
     period: "2022 – 2025",
@@ -103,8 +148,10 @@ export const works: Work[] = [
         ],
       },
     ],
+    post: "model-graph-rendering",
   },
   {
+    id: "fitsonchips",
     name: "FitsOnChips",
     category: "LLM 벤치마크",
     period: "2023 – 2025",
@@ -127,6 +174,7 @@ export const works: Work[] = [
     ],
   },
   {
+    id: "squeezebits-web",
     name: "스퀴즈비츠 공식 웹사이트",
     category: "회사 웹사이트",
     period: "2025 – 2026",
@@ -151,33 +199,7 @@ export const works: Work[] = [
         text: "서브셋 분리와 unicode-range, 로케일별 동적 import로 초기 폰트 다운로드를 **2.06MB에서 53KB로 97% 축소**",
       },
     ],
-  },
-];
-
-export const stories: Story[] = [
-  {
-    title: "3분 가까이 걸리던 그래프를 19초로",
-    project: "Owlite",
-    problem:
-      "SVG와 HTML DOM을 섞어 그리는 모델 그래프 뷰어가 노드 4,000개가 넘는 대규모 모델에서 몇 분씩 멈췄습니다.",
-    approach:
-      "그래프 규모에 따라 레이아웃 알고리즘을 나눠 쓰고, O(n²) 배열 탐색과 재귀 처리처럼 시간을 잡아먹던 병목을 하나씩 걷어냈습니다.",
-    result: "Stable Diffusion UNet XL 기준 렌더링 시간을 172.64초에서 18.85초로, 89% 줄였습니다.",
-  },
-  {
-    title: "첫 화면 폰트를 53KB로",
-    project: "스퀴즈비츠 공식 웹사이트",
-    problem: "한국어·일본어·영문을 모두 지원하느라 첫 화면을 그리기 전에 받아야 하는 폰트가 2MB를 넘었습니다.",
-    approach:
-      "폰트를 latin·korean·japanese 서브셋으로 나누고, unicode-range와 로케일별 동적 import로 필요한 글자만 받도록 바꿨습니다.",
-    result: "초기 폰트 다운로드를 2.06MB에서 53KB로 97% 줄였고, 저장소의 폰트 자산도 14.3MB에서 6.8MB로 줄였습니다.",
-  },
-  {
-    title: "새 모델마다 반복되던 화면 작업 없애기",
-    project: "Yetter",
-    problem: "AI 모델이 추가될 때마다 입력 폼을 직접 만들어야 해서, 모델 하나에 2~3시간의 프론트엔드 작업이 필요했습니다.",
-    approach: "모델의 OpenAPI 입력 스키마를 해석해 폼과 중첩 데이터 구조를 자동으로 구성하도록 만들었습니다.",
-    result: "이제 새 모델이 추가되어도 코드 수정 없이 입력 화면이 바로 만들어집니다.",
+    post: "font-subsetting",
   },
 ];
 
@@ -206,3 +228,9 @@ export const skills: SkillGroup[] = [
   { title: "백엔드와 운영", items: ["FastAPI", "MongoDB", "MySQL", "Docker", "Jenkins", "AWS", "Sentry", "GA4/GTM"] },
   { title: "함께 일하는", items: ["GitHub", "Claude", "Cursor AI"] },
 ];
+
+export function findWork(id: Work["id"]) {
+  const work = works.find((item) => item.id === id);
+  if (!work) throw new Error(`알 수 없는 작업: ${id}`);
+  return work;
+}

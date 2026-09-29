@@ -1,13 +1,20 @@
+import Link from "next/link";
 import type { ReactNode } from "react";
 import type { Highlight } from "@/lib/resume";
+
+/** 사이트 전체 폭. 긴 문단은 안에서 READING으로 다시 좁힌다 */
+export const SHELL = "mx-auto max-w-[960px]";
+
+/** 긴 문단의 읽기 폭 */
+export const READING = "max-w-[680px]";
 
 /** 모든 구역이 공유하는 2단 격자. 왼쪽은 구역 이름, 오른쪽은 본문 */
 export const COLUMNS = "md:grid md:grid-cols-[140px_minmax(0,1fr)] md:gap-10";
 
-/** 홈 화면의 한 구역. 헤더 메뉴가 id로 이동 */
+/** 한 구역. 위쪽 얇은 구분선으로 앞 구역과 나눈다 */
 export function Section({ id, title, children }: { id: string; title: string; children: ReactNode }) {
   return (
-    <section id={id} aria-labelledby={`${id}-title`} className={`py-14 sm:py-20 ${COLUMNS}`}>
+    <section id={id} aria-labelledby={`${id}-title`} className={`border-t border-line py-14 sm:py-20 ${COLUMNS}`}>
       <h2 id={`${id}-title`} className="mb-8 text-[15px] leading-[1.9] font-semibold text-heading md:mb-0">
         {title}
       </h2>
@@ -16,22 +23,44 @@ export function Section({ id, title, children }: { id: string; title: string; ch
   );
 }
 
-/** 본문 속 밑줄 링크. 외부 주소면 새 창으로 */
+/** 본문 속 밑줄 링크. 외부 주소면 새 창으로, 내부 주소면 클라이언트 이동 */
 export function TextLink({ href, children }: { href: string; children: ReactNode }) {
+  const className =
+    "text-heading underline decoration-line decoration-1 underline-offset-[5px] transition-colors hover:decoration-gold";
+  if (href.startsWith("/")) {
+    return (
+      <Link href={href} className={className}>
+        {children}
+      </Link>
+    );
+  }
   const external = href.startsWith("http");
   return (
-    <a
-      href={href}
-      {...(external && { target: "_blank", rel: "noreferrer" })}
-      className="text-heading underline decoration-line decoration-1 underline-offset-[5px] transition-colors hover:decoration-accent"
-    >
+    <a href={href} {...(external && { target: "_blank", rel: "noreferrer" })} className={className}>
       {children}
     </a>
   );
 }
 
+/** "관련 글 →" 같은 이동 링크. 화살표만 골드, hover 시 골드 밑줄이 그어짐 */
+export function ArrowLink({ href, children }: { href: string; children: ReactNode }) {
+  return (
+    <Link href={href} className="group inline-flex items-baseline gap-1.5 text-sm text-sub transition-colors hover:text-heading">
+      <span className="link-underline">{children}</span>
+      <span aria-hidden="true" className="text-gold transition-transform group-hover:translate-x-0.5 motion-reduce:transition-none">
+        →
+      </span>
+    </Link>
+  );
+}
+
+/** 목록 번호. 골드는 이런 작은 표시에만 쓴다 */
+export function Num({ n }: { n: number }) {
+  return <span className="text-gold tabular-nums">{String(n).padStart(2, "0")}</span>;
+}
+
 /** "**굵게**" 표기를 <strong>으로 바꿔서 출력 */
-function RichText({ text }: { text: string }) {
+export function RichText({ text }: { text: string }) {
   return text.split("**").map((part, i) =>
     i % 2 === 1 ? (
       <strong key={i} className="font-semibold text-heading">
