@@ -19,9 +19,10 @@ export default async function HomePage() {
       </Section>
 
       <Section id="expertise" title="잘하는 일">
-        <ol className="grid gap-10 sm:grid-cols-3 sm:gap-8">
+        {/* 세 열이 번호·제목·설명·목록 행을 공유해, 설명이 가장 긴 열에 맞춰 구분선이 정렬된다 */}
+        <ol className="grid gap-10 sm:grid-cols-3 sm:gap-x-8 sm:gap-y-0">
           {expertise.map((item, i) => (
-            <li key={item.title}>
+            <li key={item.title} className="sm:row-span-4 sm:grid sm:grid-rows-subgrid">
               <p className="text-sm">
                 <Num n={i + 1} />
               </p>
