@@ -1,19 +1,47 @@
-import type { ReactNode } from "react";
+import type { ReactNode, SVGProps } from "react";
 
 // 블로그 글 썸네일. 글마다 내용을 상징하는 단순한 도형 그림을 인라인 SVG로 그린다.
-// 색은 모두 globals.css의 변수라 라이트/다크 테마를 자동으로 따라간다.
-// 배경은 --soft, 평범한 요소는 --background·--line, 글의 핵심은 --accent, 골드는 점 하나만.
+// 규칙은 docs/blog-thumbnail-guide.md. 아래 토큰만 써서 그리고, 숫자를 새로 만들지 않는다.
 
 const W = 1200;
 const H = 630;
 
-const bg = "var(--background)";
-const soft = "var(--soft)";
-const line = "var(--line)";
-const accent = "var(--accent)";
-const accentSoft = "var(--accent-soft)";
-const gold = "var(--gold)";
-const muted = "var(--muted)";
+/** 색. globals.css의 --thumb-* 변수라 라이트/다크 테마를 따라간다 */
+const C = {
+  bg: "var(--thumb-bg)",
+  surface: "var(--thumb-surface)",
+  line: "var(--thumb-line)",
+  muted: "var(--thumb-muted)",
+  accent: "var(--accent)",
+  accentSoft: "var(--thumb-accent-soft)",
+  strong: "var(--heading)",
+  gold: "var(--gold)",
+};
+
+/** 선 두께. 평범한 선·테두리·연결선은 base, 강조된 선·테두리·흐름은 strong */
+const STROKE = { base: 2, strong: 3 };
+
+/** 모서리. 큰 패널·칸은 panel, 노드·카드·입력 칸은 node. 막대는 높이의 절반(알약) */
+const RADIUS = { panel: 16, node: 10 };
+
+/** 스켈레톤·데이터 막대 높이 */
+const BAR = 14;
+
+/** 점 반지름 */
+const DOT = { base: 7, strong: 9 };
+
+/** 그림이 들어가는 안전 영역. 좌우 11%, 상하 13%. 그림은 이 상자의 가로나 세로를 꽉 채운다 */
+const SAFE = { left: 132, right: 1068, top: 82, bottom: 548 };
+const CENTER = { x: W / 2, y: H / 2 };
+
+/** 흐름을 나타내는 점선 연결선 */
+const flow: SVGProps<SVGPathElement> = {
+  fill: "none",
+  stroke: C.accent,
+  strokeWidth: STROKE.strong,
+  strokeDasharray: "2 10",
+  strokeLinecap: "round",
+};
 
 const thumbnails: Record<string, { label: string; draw: () => ReactNode }> = {
   "model-graph-rendering": { label: "여러 층의 노드 그래프에서 한 경로가 강조된 그림", draw: ModelGraph },
@@ -31,224 +59,252 @@ export function PostThumbnail({ slug, className = "" }: { slug: string; classNam
   if (!thumbnail) return null;
   return (
     <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={thumbnail.label} className={`block h-auto w-full rounded-[10px] ${className}`}>
-      <rect width={W} height={H} fill={soft} />
+      <rect width={W} height={H} fill={C.bg} />
       {thumbnail.draw()}
     </svg>
   );
 }
 
-/** 모델 그래프: 층마다 노드를 두고 이웃한 층끼리 잇는다. path가 병목을 따라간 경로 */
+/** 결과 지점을 표시하는 골드 점. 썸네일마다 하나, 강조 흐름이 끝나는 곳에만 */
+function GoldDot({ x, y }: { x: number; y: number }) {
+  return <circle cx={x} cy={y} r={DOT.strong} fill={C.gold} stroke={C.bg} strokeWidth={STROKE.strong} />;
+}
+
+/** 노드·카드·입력 칸. hot이면 강조 */
+function Box({ x, y, w, h, hot = false, r = RADIUS.node }: { x: number; y: number; w: number; h: number; hot?: boolean; r?: number }) {
+  return (
+    <rect
+      x={x}
+      y={y}
+      width={w}
+      height={h}
+      rx={r}
+      fill={hot ? C.accentSoft : C.surface}
+      stroke={hot ? C.accent : C.line}
+      strokeWidth={hot ? STROKE.strong : STROKE.base}
+    />
+  );
+}
+
+/** 스켈레톤·데이터 막대 */
+function Bar({ x, y, w, fill = C.line }: { x: number; y: number; w: number; fill?: string }) {
+  return <rect x={x} y={y - BAR / 2} width={w} height={BAR} rx={BAR / 2} fill={fill} />;
+}
+
+/** 모델 그래프: 층마다 노드를 두고 이웃한 층끼리 잇는다. 강조한 경로가 병목을 걷어낸 길 */
 function ModelGraph() {
-  const cols = [250, 425, 600, 775, 950];
-  const rows = [[270, 360], [195, 285, 375, 465], [150, 240, 330, 420, 510], [195, 285, 375, 465], [270, 360]];
-  const path = [0, 1, 2, 2, 1]; // 층별로 강조할 노드의 순서
-  const [nw, nh] = [96, 40];
+  const [nw, nh] = [112, 44];
+  const gap = 140; // 같은 층 노드 사이 세로 간격
+  const counts = [2, 3, 4, 3, 2];
+  const cols = counts.map((_, c) => SAFE.left + nw / 2 + (c * (SAFE.right - SAFE.left - nw)) / (counts.length - 1));
+  const rows = counts.map((n) => Array.from({ length: n }, (_, r) => CENTER.y + (r - (n - 1) / 2) * gap));
+  const path = [0, 1, 2, 2, 1]; // 층별로 강조할 노드
 
   const edges = cols.slice(0, -1).flatMap((x, c) =>
     rows[c].flatMap((y1, r) =>
       rows[c + 1]
-        .filter((y2) => Math.abs(y1 - y2) <= 200)
-        .map((y2) => ({ x1: x + nw / 2, y1, x2: cols[c + 1] - nw / 2, y2, hot: path[c] === r && rows[c + 1][path[c + 1]] === y2 })),
+        .map((y2, r2) => ({ y2, hot: path[c] === r && path[c + 1] === r2 }))
+        .filter(({ y2 }) => Math.abs(y1 - y2) <= gap)
+        .map(({ y2, hot }) => ({ x1: x + nw / 2, y1, x2: cols[c + 1] - nw / 2, y2, hot })),
     ),
   );
-  const nodes = cols.flatMap((x, c) => rows[c].map((y, r) => ({ x, y, hot: path[c] === r })));
-  const last = { x: cols.at(-1)!, y: rows.at(-1)![path.at(-1)!] };
+  const end = { x: cols.at(-1)!, y: rows.at(-1)![path.at(-1)!] };
 
   return (
-    <g transform="translate(600 315) scale(1.2) translate(-600 -330)">
-      {edges.map(({ hot, ...e }, i) => (
-        <line key={i} {...e} stroke={hot ? accent : line} strokeWidth={hot ? 3 : 1.5} strokeLinecap="round" />
-      ))}
-      {nodes.map(({ x, y, hot }) => (
-        <rect
-          key={`${x}-${y}`}
-          x={x - nw / 2}
-          y={y - nh / 2}
-          width={nw}
-          height={nh}
-          rx={8}
-          fill={hot ? accentSoft : bg}
-          stroke={hot ? accent : line}
-          strokeWidth={hot ? 2.5 : 1.5}
-        />
-      ))}
-      <circle cx={last.x + nw / 2} cy={last.y - nh / 2} r={8} fill={gold} stroke={soft} strokeWidth={3} />
+    <g>
+      {/* 강조 선이 평범한 선 위에 오도록 순서대로 그림 */}
+      {[false, true].map((layer) =>
+        edges
+          .filter(({ hot }) => hot === layer)
+          .map(({ hot, ...e }) => (
+            <line key={`${e.x1}-${e.y1}-${e.y2}`} {...e} stroke={hot ? C.accent : C.line} strokeWidth={hot ? STROKE.strong : STROKE.base} />
+          )),
+      )}
+      {cols.map((x, c) =>
+        rows[c].map((y, r) => <Box key={`${x}-${y}`} x={x - nw / 2} y={y - nh / 2} w={nw} h={nh} hot={path[c] === r} />),
+      )}
+      <GoldDot x={end.x + nw / 2} y={end.y - nh / 2} />
     </g>
   );
 }
 
 /** OpenAPI 폼: 왼쪽 스키마의 필드 줄이 오른쪽 입력 폼의 칸으로 이어진다 */
 function SchemaForm() {
-  // 스키마 쪽 필드 줄 (들여쓰기, 키 길이, 값 길이)
+  const pw = 380; // 패널 너비
+  const schemaX = SAFE.left;
+  const formX = SAFE.right - pw;
+  const ph = SAFE.bottom - SAFE.top;
+  const pad = 40;
+
+  // 스키마 필드 줄: 들여쓰기 단계, 키 길이, 값 길이
   const schema = [
-    { indent: 0, key: 110, value: 0 },
-    { indent: 1, key: 90, value: 70 },
-    { indent: 1, key: 120, value: 60 },
-    { indent: 1, key: 80, value: 80 },
-    { indent: 1, key: 100, value: 0 },
-    { indent: 2, key: 70, value: 60 },
-    { indent: 2, key: 90, value: 50 },
-  ];
-  const links = [1, 2, 3, 5]; // 폼으로 이어지는 필드
-  const fields = [165, 255, 345, 450];
+    [0, 120, 0],
+    [1, 96, 72],
+    [1, 128, 60],
+    [1, 84, 88],
+    [1, 108, 0],
+    [2, 76, 64],
+    [2, 96, 52],
+  ] as const;
+  const rowY = (i: number) => SAFE.top + 56 + i * 62;
+
+  // 폼 칸: 연결되는 스키마 줄과 세로 위치
+  const input = { row: 1, y: 150 };
+  const slider = { row: 2, y: 240 };
+  const select = { row: 3, y: 330 };
+  const group = { row: 5, y: 450 };
+  const links = [input, slider, select, group];
+  const fx = formX + pad;
+  const fw = pw - pad * 2;
 
   return (
     <g>
-      {/* 스키마 패널 */}
-      <rect x={130} y={110} width={400} height={410} rx={14} fill={bg} stroke={line} strokeWidth={2} />
-      {schema.map(({ indent, key, value }, i) => {
-        const y = 165 + i * 50;
-        const x = 170 + indent * 32;
-        const hot = links.includes(i);
+      <Box x={schemaX} y={SAFE.top} w={pw} h={ph} r={RADIUS.panel} />
+      {schema.map(([indent, key, value], i) => {
+        const x = schemaX + pad + indent * 32;
+        const linked = links.some((link) => link.row === i);
         return (
           <g key={i}>
-            <rect x={x} y={y - 7} width={key} height={14} rx={7} fill={hot ? accent : muted} fillOpacity={hot ? 1 : 0.55} />
-            {value > 0 && <rect x={x + key + 16} y={y - 7} width={value} height={14} rx={7} fill={line} />}
+            <Bar x={x} y={rowY(i)} w={key} fill={linked ? C.accent : C.muted} />
+            {value > 0 && <Bar x={x + key + 16} y={rowY(i)} w={value} />}
           </g>
         );
       })}
 
-      {/* 스키마 → 폼 연결선 */}
-      {links.map((row, i) => {
-        const y1 = 165 + row * 50;
-        const y2 = fields[i];
-        return (
-          <path
-            key={row}
-            d={`M 530 ${y1} C 600 ${y1}, 610 ${y2}, 680 ${y2}`}
-            fill="none"
-            stroke={accent}
-            strokeWidth={2.5}
-            strokeDasharray="2 9"
-            strokeLinecap="round"
-          />
-        );
+      {links.map(({ row, y }) => {
+        const [x1, y1, x2] = [schemaX + pw, rowY(row), formX];
+        const mx = (x1 + x2) / 2;
+        return <path key={row} d={`M ${x1} ${y1} C ${mx} ${y1}, ${mx} ${y}, ${x2} ${y}`} {...flow} />;
       })}
 
-      {/* 입력 폼 패널 */}
-      <rect x={680} y={110} width={390} height={410} rx={14} fill={bg} stroke={line} strokeWidth={2} />
+      <Box x={formX} y={SAFE.top} w={pw} h={ph} r={RADIUS.panel} />
       {/* 텍스트 입력 */}
-      <rect x={720} y={fields[0] - 22} width={310} height={44} rx={8} fill={bg} stroke={accent} strokeWidth={2.5} />
-      <rect x={740} y={fields[0] - 6} width={120} height={12} rx={6} fill={line} />
+      <Box x={fx} y={input.y - 26} w={fw} h={52} />
+      <Bar x={fx + 20} y={input.y} w={120} />
       {/* 숫자 입력(슬라이더) */}
-      <rect x={720} y={fields[1] - 3} width={310} height={6} rx={3} fill={line} />
-      <rect x={720} y={fields[1] - 3} width={190} height={6} rx={3} fill={accent} />
-      <circle cx={910} cy={fields[1]} r={13} fill={bg} stroke={accent} strokeWidth={2.5} />
+      <Bar x={fx} y={slider.y} w={fw} />
+      <Bar x={fx} y={slider.y} w={180} fill={C.muted} />
+      <circle cx={fx + 180} cy={slider.y} r={14} fill={C.surface} stroke={C.muted} strokeWidth={STROKE.base} />
       {/* 선택 상자 */}
-      <rect x={720} y={fields[2] - 22} width={310} height={44} rx={8} fill={bg} stroke={line} strokeWidth={2} />
-      <rect x={740} y={fields[2] - 6} width={90} height={12} rx={6} fill={line} />
-      <path d={`M 995 ${fields[2] - 5} l 9 9 l 9 -9`} fill="none" stroke={muted} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+      <Box x={fx} y={select.y - 26} w={fw} h={52} />
+      <Bar x={fx + 20} y={select.y} w={96} />
+      <path
+        d={`M ${fx + fw - 34} ${select.y - 5} l 9 9 l 9 -9`}
+        fill="none"
+        stroke={C.muted}
+        strokeWidth={STROKE.base}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
       {/* 중첩 객체: 들여쓴 묶음 */}
-      <rect x={720} y={fields[3] - 42} width={310} height={84} rx={8} fill={accentSoft} />
-      <rect x={745} y={fields[3] - 24} width={260} height={16} rx={8} fill={bg} />
-      <rect x={745} y={fields[3] + 8} width={180} height={16} rx={8} fill={bg} />
-      <circle cx={1070} cy={110} r={9} fill={gold} stroke={soft} strokeWidth={3} />
+      <Box x={fx} y={group.y - 58} w={fw} h={116} />
+      <Bar x={fx + 24} y={group.y - 18} w={fw - 90} />
+      <Bar x={fx + 24} y={group.y + 18} w={fw - 150} />
+
+      <GoldDot x={formX + pw} y={SAFE.top} />
     </g>
   );
 }
 
 /** SSE: 위쪽 이벤트가 짧은 구간씩 묶이고, 아래 워크플로우에서 바뀐 노드만 다시 그려진다 */
 function EventBatch() {
-  // 이벤트 도착 시점. 가운데 묶음이 지금 반영되는 이벤트들
-  const events = [180, 215, 250, 310, 345, 470, 505, 540, 575, 610, 720, 755, 790, 880, 915, 1000];
-  const batch = [440, 640]; // 강조할 묶음 구간
-  const stale = 1000; // 이전 실행에서 늦게 도착한 이벤트
-  const nodes = [240, 480, 720, 960];
-  const updated = 1; // 다시 그려지는 노드
-  const ty = 180; // 타임라인 높이
-  const ny = 380; // 노드 윗변
-  const mid = (batch[0] + batch[1]) / 2;
+  const ty = 130; // 타임라인 높이
+  const batch = { x1: 520, x2: 720 }; // 한 번에 반영되는 묶음
+  const events = [170, 205, 240, 305, 345, 555, 590, 620, 650, 685, 790, 825, 900, 940];
+  const stale = 1030; // 이전 실행에서 늦게 도착해 버리는 이벤트
+
+  const [cw, ch] = [182, 132];
+  const cy = SAFE.bottom - ch;
+  const cards = Array.from({ length: 4 }, (_, i) => SAFE.left + cw / 2 + (i * (SAFE.right - SAFE.left - cw)) / 3);
+  const updated = 1;
+  const mid = (batch.x1 + batch.x2) / 2;
 
   return (
     <g>
       {/* 이벤트 타임라인 */}
-      <line x1={140} y1={ty} x2={1060} y2={ty} stroke={line} strokeWidth={2} />
-      <rect x={batch[0]} y={ty - 40} width={batch[1] - batch[0]} height={80} rx={12} fill={accentSoft} stroke={accent} strokeWidth={2.5} />
+      <line x1={SAFE.left} y1={ty} x2={SAFE.right} y2={ty} stroke={C.line} strokeWidth={STROKE.base} />
+      <Box x={batch.x1} y={SAFE.top} w={batch.x2 - batch.x1} h={(ty - SAFE.top) * 2} hot />
       {events.map((x) => {
-        const inBatch = x > batch[0] && x < batch[1];
-        if (x === stale) {
-          return (
-            <g key={x}>
-              <circle cx={x} cy={ty} r={11} fill={soft} stroke={muted} strokeWidth={2} strokeDasharray="4 4" />
-              <path d={`M ${x - 7} ${ty - 7} l 14 14 M ${x + 7} ${ty - 7} l -14 14`} stroke={muted} strokeWidth={2} strokeLinecap="round" />
-            </g>
-          );
-        }
-        return <circle key={x} cx={x} cy={ty} r={inBatch ? 9 : 7} fill={inBatch ? accent : muted} fillOpacity={inBatch ? 1 : 0.5} />;
+        const inBatch = x > batch.x1 && x < batch.x2;
+        return <circle key={x} cx={x} cy={ty} r={inBatch ? DOT.strong : DOT.base} fill={inBatch ? C.accent : C.muted} />;
       })}
-
-      {/* 묶음 → 바뀐 노드 */}
+      <circle cx={stale} cy={ty} r={DOT.strong + 3} fill={C.bg} stroke={C.muted} strokeWidth={STROKE.base} strokeDasharray="4 4" />
       <path
-        d={`M ${mid} ${ty + 40} C ${mid} ${ny - 50}, ${nodes[updated]} ${ty + 90}, ${nodes[updated]} ${ny}`}
-        fill="none"
-        stroke={accent}
-        strokeWidth={2.5}
-        strokeDasharray="2 9"
+        d={`M ${stale - 6} ${ty - 6} l 12 12 M ${stale + 6} ${ty - 6} l -12 12`}
+        stroke={C.muted}
+        strokeWidth={STROKE.base}
         strokeLinecap="round"
       />
 
+      {/* 묶음 → 바뀐 노드 */}
+      <path d={`M ${mid} ${2 * ty - SAFE.top} C ${mid} ${cy - 60}, ${cards[updated]} ${ty + 120}, ${cards[updated]} ${cy}`} {...flow} />
+
       {/* 워크플로우 노드 */}
-      {nodes.slice(0, -1).map((x, i) => (
-        <line key={x} x1={x + 80} y1={ny + 55} x2={nodes[i + 1] - 80} y2={ny + 55} stroke={line} strokeWidth={2} />
+      {cards.slice(0, -1).map((x, i) => (
+        <line key={x} x1={x + cw / 2} y1={cy + ch / 2} x2={cards[i + 1] - cw / 2} y2={cy + ch / 2} stroke={C.line} strokeWidth={STROKE.base} />
       ))}
-      {nodes.map((x, i) => {
+      {cards.map((x, i) => {
         const hot = i === updated;
         return (
           <g key={x}>
-            <rect x={x - 80} y={ny} width={160} height={110} rx={12} fill={hot ? accentSoft : bg} stroke={hot ? accent : line} strokeWidth={hot ? 2.5 : 2} />
-            <rect x={x - 55} y={ny + 34} width={hot ? 90 : 70} height={14} rx={7} fill={hot ? accent : line} />
-            <rect x={x - 55} y={ny + 62} width={hot ? 110 : 100} height={14} rx={7} fill={hot ? accent : line} fillOpacity={hot ? 0.45 : 1} />
+            <Box x={x - cw / 2} y={cy} w={cw} h={ch} hot={hot} />
+            <Bar x={x - cw / 2 + 28} y={cy + 48} w={hot ? 100 : 84} fill={hot ? C.accent : C.line} />
+            <Bar x={x - cw / 2 + 28} y={cy + 84} w={hot ? 126 : 112} fill={hot ? C.accent : C.line} />
           </g>
         );
       })}
-      <circle cx={nodes[updated] + 80} cy={ny} r={9} fill={gold} stroke={soft} strokeWidth={3} />
+      <GoldDot x={cards[updated] + cw / 2} y={cy} />
     </g>
   );
 }
 
-/** 폰트 서브셋: 세 언어 글자 중 필요한 글자만 받고, 아래 막대가 용량 차이를 보여 준다 */
+/** 폰트 서브셋: 세 언어 글자 중 필요한 글자만 받고, 아래 막대가 줄어든 용량을 보여 준다 */
 function FontSubset() {
+  const [tile, th] = [260, 320]; // 칸 너비, 높이
   const glyphs = [
-    { x: 250, text: "Aa", hot: false },
-    { x: 600, text: "가", hot: true },
-    { x: 950, text: "あ", hot: false },
+    { text: "Aa", hot: false },
+    { text: "가", hot: true },
+    { text: "あ", hot: false },
   ];
+  const tx = (i: number) => SAFE.left + (i * (SAFE.right - SAFE.left - tile)) / 2;
+  const top = SAFE.top;
+  const before = { y: top + th + 78 };
+  const after = { y: before.y + 54, w: Math.max(BAR, ((SAFE.right - SAFE.left) * 53) / 2060) };
 
   return (
-    <g transform="translate(0 23)">
-      {glyphs.map(({ x, text, hot }) => (
+    <g>
+      {glyphs.map(({ text, hot }, i) => (
         <g key={text}>
           <rect
-            x={x - 130}
-            y={100}
-            width={260}
-            height={240}
-            rx={16}
-            fill={hot ? bg : soft}
-            stroke={hot ? accent : line}
-            strokeWidth={hot ? 3 : 2}
+            x={tx(i)}
+            y={top}
+            width={tile}
+            height={th}
+            rx={RADIUS.panel}
+            fill={hot ? C.surface : C.bg}
+            stroke={hot ? C.accent : C.line}
+            strokeWidth={hot ? STROKE.strong : STROKE.base}
             strokeDasharray={hot ? undefined : "10 10"}
           />
           <text
-            x={x}
-            y={222}
+            x={tx(i) + tile / 2}
+            y={top + th / 2}
             textAnchor="middle"
             dominantBaseline="central"
-            fontSize={120}
+            fontSize={124}
             fontWeight={600}
-            fill={hot ? "var(--heading)" : muted}
-            fillOpacity={hot ? 1 : 0.45}
+            fill={hot ? C.strong : C.muted}
             style={{ fontFamily: "var(--font-sans)" }}
           >
             {text}
           </text>
         </g>
       ))}
-      <circle cx={730} cy={100} r={9} fill={gold} stroke={soft} strokeWidth={3} />
 
-      {/* 용량 막대: 전(2.06MB)과 후(53KB) */}
-      <rect x={120} y={425} width={960} height={16} rx={8} fill={line} />
-      <rect x={120} y={465} width={Math.max(24, (960 * 53) / 2060)} height={16} rx={8} fill={accent} />
+      {/* 용량 막대: 전(2.06MB)과 후(53KB). 실제 비율 그대로 */}
+      <Bar x={SAFE.left} y={before.y} w={SAFE.right - SAFE.left} />
+      <Bar x={SAFE.left} y={after.y} w={after.w} fill={C.accent} />
+      <GoldDot x={SAFE.left + after.w + 20} y={after.y} />
     </g>
   );
 }

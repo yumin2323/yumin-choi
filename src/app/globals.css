@@ -20,6 +20,13 @@
   --gold: #b9955a;
   --focus: #91afc8;
   --green: #3f8a6a;
+
+  /* 블로그 썸네일 전용 (docs/blog-thumbnail-guide.md) */
+  --thumb-bg: #edf2f6;
+  --thumb-surface: #ffffff;
+  --thumb-line: #cdd7e1;
+  --thumb-muted: #a3afbc;
+  --thumb-accent-soft: #dce7f0;
 }
 
 :root[data-theme="dark"] {
@@ -38,6 +45,13 @@
   --gold: #d0ae72;
   --focus: #7fa2c1;
   --green: #6fbf9a;
+
+  /* 다크에서는 칸이 배경보다 밝게 떠 보이고, 선이 묻히지 않도록 명도를 올림 */
+  --thumb-bg: #18232f;
+  --thumb-surface: #223142;
+  --thumb-line: #3b4d60;
+  --thumb-muted: #6c7f93;
+  --thumb-accent-soft: #2a4560;
 }
 
 @theme inline {
