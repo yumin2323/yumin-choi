@@ -137,7 +137,7 @@ function SchemaForm() {
       {/* 선택 상자 */}
       <rect x={720} y={fields[2] - 22} width={310} height={44} rx={8} fill={bg} stroke={line} strokeWidth={2} />
       <rect x={740} y={fields[2] - 6} width={90} height={12} rx={6} fill={line} />
-      <path d={`M 995 ${fields[2] - 5} l 9 9 l 9 -9`} fill="none" stroke={muted} strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />
+      <path d={`M 995 ${fields[2] - 5} l 9 9 l 9 -9`} fill="none" stroke={muted} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
       {/* 중첩 객체: 들여쓴 묶음 */}
       <rect x={720} y={fields[3] - 42} width={310} height={84} rx={8} fill={accentSoft} />
       <rect x={745} y={fields[3] - 24} width={260} height={16} rx={8} fill={bg} />
@@ -155,28 +155,31 @@ function EventBatch() {
   const stale = 1000; // 이전 실행에서 늦게 도착한 이벤트
   const nodes = [240, 480, 720, 960];
   const updated = 1; // 다시 그려지는 노드
+  const ty = 180; // 타임라인 높이
+  const ny = 380; // 노드 윗변
+  const mid = (batch[0] + batch[1]) / 2;
 
   return (
-    <g transform="translate(0 -5)">
+    <g>
       {/* 이벤트 타임라인 */}
-      <line x1={140} y1={190} x2={1060} y2={190} stroke={line} strokeWidth={2} />
-      <rect x={batch[0]} y={150} width={batch[1] - batch[0]} height={80} rx={12} fill={accentSoft} stroke={accent} strokeWidth={2} />
+      <line x1={140} y1={ty} x2={1060} y2={ty} stroke={line} strokeWidth={2} />
+      <rect x={batch[0]} y={ty - 40} width={batch[1] - batch[0]} height={80} rx={12} fill={accentSoft} stroke={accent} strokeWidth={2.5} />
       {events.map((x) => {
         const inBatch = x > batch[0] && x < batch[1];
         if (x === stale) {
           return (
             <g key={x}>
-              <circle cx={x} cy={190} r={11} fill={soft} stroke={muted} strokeWidth={2} strokeDasharray="4 4" />
-              <path d={`M ${x - 7} 183 l 14 14 M ${x + 7} 183 l -14 14`} stroke={muted} strokeWidth={2} strokeLinecap="round" />
+              <circle cx={x} cy={ty} r={11} fill={soft} stroke={muted} strokeWidth={2} strokeDasharray="4 4" />
+              <path d={`M ${x - 7} ${ty - 7} l 14 14 M ${x + 7} ${ty - 7} l -14 14`} stroke={muted} strokeWidth={2} strokeLinecap="round" />
             </g>
           );
         }
-        return <circle key={x} cx={x} cy={190} r={inBatch ? 9 : 7} fill={inBatch ? accent : muted} fillOpacity={inBatch ? 1 : 0.5} />;
+        return <circle key={x} cx={x} cy={ty} r={inBatch ? 9 : 7} fill={inBatch ? accent : muted} fillOpacity={inBatch ? 1 : 0.5} />;
       })}
 
       {/* 묶음 → 바뀐 노드 */}
       <path
-        d={`M ${(batch[0] + batch[1]) / 2} 230 C ${(batch[0] + batch[1]) / 2} 320, ${nodes[updated]} 320, ${nodes[updated]} 390`}
+        d={`M ${mid} ${ty + 40} C ${mid} ${ny - 50}, ${nodes[updated]} ${ty + 90}, ${nodes[updated]} ${ny}`}
         fill="none"
         stroke={accent}
         strokeWidth={2.5}
@@ -186,19 +189,19 @@ function EventBatch() {
 
       {/* 워크플로우 노드 */}
       {nodes.slice(0, -1).map((x, i) => (
-        <line key={x} x1={x + 80} y1={440} x2={nodes[i + 1] - 80} y2={440} stroke={line} strokeWidth={2} />
+        <line key={x} x1={x + 80} y1={ny + 55} x2={nodes[i + 1] - 80} y2={ny + 55} stroke={line} strokeWidth={2} />
       ))}
       {nodes.map((x, i) => {
         const hot = i === updated;
         return (
           <g key={x}>
-            <rect x={x - 80} y={390} width={160} height={100} rx={12} fill={hot ? accentSoft : bg} stroke={hot ? accent : line} strokeWidth={hot ? 2.5 : 2} />
-            <rect x={x - 55} y={420} width={hot ? 90 : 70} height={12} rx={6} fill={hot ? accent : line} />
-            <rect x={x - 55} y={446} width={hot ? 110 : 100} height={12} rx={6} fill={hot ? accent : line} fillOpacity={hot ? 0.45 : 1} />
+            <rect x={x - 80} y={ny} width={160} height={110} rx={12} fill={hot ? accentSoft : bg} stroke={hot ? accent : line} strokeWidth={hot ? 2.5 : 2} />
+            <rect x={x - 55} y={ny + 34} width={hot ? 90 : 70} height={14} rx={7} fill={hot ? accent : line} />
+            <rect x={x - 55} y={ny + 62} width={hot ? 110 : 100} height={14} rx={7} fill={hot ? accent : line} fillOpacity={hot ? 0.45 : 1} />
           </g>
         );
       })}
-      <circle cx={nodes[updated] + 80} cy={390} r={9} fill={gold} stroke={soft} strokeWidth={3} />
+      <circle cx={nodes[updated] + 80} cy={ny} r={9} fill={gold} stroke={soft} strokeWidth={3} />
     </g>
   );
 }
@@ -212,7 +215,7 @@ function FontSubset() {
   ];
 
   return (
-    <g transform="translate(0 15)">
+    <g transform="translate(0 23)">
       {glyphs.map(({ x, text, hot }) => (
         <g key={text}>
           <rect
@@ -244,8 +247,8 @@ function FontSubset() {
       <circle cx={730} cy={100} r={9} fill={gold} stroke={soft} strokeWidth={3} />
 
       {/* 용량 막대: 전(2.06MB)과 후(53KB) */}
-      <rect x={120} y={420} width={960} height={22} rx={11} fill={line} />
-      <rect x={120} y={480} width={Math.max(24, (960 * 53) / 2060)} height={22} rx={11} fill={accent} />
+      <rect x={120} y={425} width={960} height={16} rx={8} fill={line} />
+      <rect x={120} y={465} width={Math.max(24, (960 * 53) / 2060)} height={16} rx={8} fill={accent} />
     </g>
   );
 }
