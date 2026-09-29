@@ -38,11 +38,14 @@ export default async function HomePage() {
       </Section>
 
       <Section id="work" title="대표 작업">
-        <ol className="space-y-12">
-          {selectedWork.map((item) => {
+        <ol className="divide-y divide-line">
+          {selectedWork.map((item, i) => {
             const work = findWork(item.work);
             return (
-              <li key={item.title} className={READING}>
+              <li key={item.title} className={`py-10 first:pt-0 last:pb-0 ${READING}`}>
+                <p className="mb-2 text-sm">
+                  <Num n={i + 1} />
+                </p>
                 <h3 className="text-[21px] leading-[1.45] font-semibold tracking-[-0.025em] text-balance text-heading">
                   {item.title}
                 </h3>
@@ -80,7 +83,6 @@ export default async function HomePage() {
       </Section>
 
       <Section id="contact" title="연락처">
-        <p className="mb-6 text-[15px] leading-[1.8] text-sub">함께 일하거나 이야기를 나누고 싶다면 편하게 연락 주세요.</p>
         <dl className="space-y-2 text-[15px]">
           {(
             [

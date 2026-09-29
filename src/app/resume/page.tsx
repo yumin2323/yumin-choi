@@ -53,8 +53,10 @@ export default function ResumePage() {
               <article>
                 <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
                   <h3 className="text-[21px] font-semibold tracking-[-0.025em] text-heading">
-                    <span className="mr-2 text-[15px] font-normal">
-                      <Num n={i + 1} /> <span className="text-gold">—</span>
+                    {/* 번호와 대시를 한 덩어리로 묶어 줄바꿈·간격이 벌어지지 않게 */}
+                    <span className="mr-2.5 text-[15px] font-normal whitespace-nowrap">
+                      <Num n={i + 1} />
+                      <span className="ml-1.5 text-gold">—</span>
                     </span>
                     {work.url ? <TextLink href={work.url}>{work.name}</TextLink> : work.name}
                   </h3>

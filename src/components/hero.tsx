@@ -11,11 +11,7 @@ export function Hero() {
           {profile.headline}
         </h1>
         <div className={`mt-10 space-y-4 text-base leading-[1.85] text-sub ${READING}`}>
-          {profile.intro.map((line, i) => (
-            <p key={line} className={i === 0 ? "text-heading" : undefined}>
-              {line}
-            </p>
-          ))}
+          <p className="text-heading">{profile.intro}</p>
           <p>
             <TextLink href={profile.now.href}>{profile.now.text}</TextLink>
           </p>
