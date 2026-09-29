@@ -25,7 +25,12 @@ export type Work = {
   post?: string;
 };
 
-export type TimelineItem = { company: string; period: string; summary: string; current?: boolean };
+export type TimelineItem = {
+  company: string;
+  period: string;
+  summary: string;
+  current?: boolean;
+};
 
 export type SkillGroup = { title: string; items: string[] };
 
@@ -40,13 +45,19 @@ export const profile = {
   role: "Frontend Developer",
   headline: "복잡한 데이터를\n빠르고 단단한 화면으로.",
   /** 히어로의 한 줄 소개. 자세한 설명은 about에서 */
-  intro: "React와 Next.js로 복잡한 데이터 화면을 만드는 프론트엔드 개발자 최유민입니다.",
+  intro:
+    "React와 Next.js로 복잡한 데이터 화면을 만드는 프론트엔드 개발자 최유민입니다.",
   /** 히어로의 지금 하는 일 한 줄 */
-  now: { text: "지금은 스퀴즈비츠에서 Yetter를 만들고 있습니다", href: "https://yetter.ai/" },
+  now: {
+    text: "지금은 스퀴즈비츠에서 Yetter를 만들고 있습니다",
+    href: "https://yetter.ai/",
+  },
   /** 홈에 보이는 주요 기술. 전체 목록은 skills */
   coreStack: ["Next.js", "TypeScript", "TanStack Query", "Zustand"],
   email: "cym6749@gmail.com",
-  links: [{ label: "GitHub", href: "https://github.com/yumin2323" }] satisfies Link[],
+  links: [
+    { label: "GitHub", href: "https://github.com/yumin2323" },
+  ] satisfies Link[],
 };
 
 export const about = [
@@ -58,12 +69,22 @@ export const expertise: Expertise[] = [
   {
     title: "복잡한 UI 설계",
     text: "상태와 인터랙션이 얽힌 화면을 다루기 쉬운 구조로 나눕니다.",
-    items: ["대규모 그래프", "워크플로우 에디터", "데이터 그리드", "다단계 설정 화면"],
+    items: [
+      "대규모 그래프",
+      "워크플로우 에디터",
+      "데이터 그리드",
+      "다단계 설정 화면",
+    ],
   },
   {
     title: "성능과 구조 개선",
     text: "느린 화면의 원인을 측정으로 찾고, 데이터가 흐르는 길을 정리합니다.",
-    items: ["렌더링 병목 분석", "상태 관리 구조 개선", "실시간 이벤트 처리", "데이터 흐름 최적화"],
+    items: [
+      "렌더링 병목 분석",
+      "상태 관리 구조 개선",
+      "실시간 이벤트 처리",
+      "데이터 흐름 최적화",
+    ],
   },
   {
     title: "제품 전체를 보는 개발",
@@ -97,9 +118,22 @@ export const works: Work[] = [
     category: "생성형 AI 플랫폼",
     period: "2025 – 현재",
     url: "https://yetter.ai/",
-    tagline: "노드를 이어 이미지와 비디오를 생성하는 AI 서비스입니다. 프론트엔드를 처음부터 설계했습니다.",
-    outcome: { before: "모델 수", after: "입력 타입 수", caption: "모델 추가 비용이 비례하는 기준 전환" },
-    stack: ["Next.js", "TypeScript", "TanStack Query", "Zustand", "Tailwind CSS", "Radix UI", "Sentry"],
+    tagline:
+      "노드를 이어 이미지와 비디오를 생성하는 AI 서비스입니다. 프론트엔드를 처음부터 설계했습니다.",
+    outcome: {
+      before: "모델 수",
+      after: "입력 타입 수",
+      caption: "모델 추가 비용이 비례하는 기준 전환",
+    },
+    stack: [
+      "Next.js",
+      "TypeScript",
+      "TanStack Query",
+      "Zustand",
+      "Tailwind CSS",
+      "Radix UI",
+      "Sentry",
+    ],
     highlights: [
       {
         title: "생성형 AI 서비스 프론트엔드 설계·구축 주도",
@@ -112,7 +146,9 @@ export const works: Work[] = [
       {
         title: "OpenAPI 기반 모델 입력 화면 자동 생성",
         text: "모델별 입력 스키마를 해석해 폼과 중첩 데이터를 자동 구성하고, 모델 추가 비용을 **모델 수가 아닌 입력 타입 종류 수에 비례**하도록 전환",
-        details: ["도입 후 5개월간 입력 타입과 위젯 추가 없이, 새로 들어온 모델은 스키마만으로 폼 생성"],
+        details: [
+          "도입 후 5개월간 입력 타입과 위젯 추가 없이, 새로 들어온 모델은 스키마만으로 폼 생성",
+        ],
       },
       {
         title: "디자인 시스템·운영 기반 구축",
@@ -126,8 +162,13 @@ export const works: Work[] = [
     name: "Owlite",
     category: "모델 분석 도구",
     period: "2022 – 2025",
-    tagline: "딥러닝 모델의 구조를 그래프로 탐색하고 양자화 설정을 다루는 모델 분석 서비스입니다.",
-    outcome: { before: "172.64초", after: "18.85초", caption: "대규모 모델 그래프 렌더링 시간 89% 단축" },
+    tagline:
+      "딥러닝 모델의 구조를 그래프로 탐색하고 양자화 설정을 다루는 모델 분석 서비스입니다.",
+    outcome: {
+      before: "172.64초",
+      after: "18.85초",
+      caption: "대규모 모델 그래프 렌더링 시간 89% 단축",
+    },
     stack: ["React", "SVG", "Redux", "Emotion", "MUI"],
     highlights: [
       {
@@ -154,13 +195,16 @@ export const works: Work[] = [
     name: "FitsOnChips",
     category: "LLM 벤치마크",
     period: "2023 – 2025",
-    tagline: "LLM 벤치마크를 실행하고 모델·하드웨어별 성능을 비교하는 서비스입니다.",
+    tagline:
+      "LLM 벤치마크를 실행하고 모델·하드웨어별 성능을 비교하는 서비스입니다.",
     stack: ["AG Grid", "Nivo", "React", "Redux", "Emotion", "MUI"],
     highlights: [
       {
         title: "AG Grid 기반 스프레드시트 편집 기능 구현",
         text: "Community 버전에서 범위 선택, 필 핸들, Excel 호환 복사·붙여넣기, Undo, 키보드 선택을 직접 구현하고 모든 셀 변경을 단일 처리 구조로 통합",
-        details: ["백엔드 벌크 API 도입 시 붙여넣은 셀 수와 관계없이 서버 요청 1건으로 처리하도록 확장"],
+        details: [
+          "백엔드 벌크 API 도입 시 붙여넣은 셀 수와 관계없이 서버 요청 1건으로 처리하도록 확장",
+        ],
       },
       {
         title: "다차원 벤치마크 시각화 구현",
@@ -177,9 +221,19 @@ export const works: Work[] = [
     name: "스퀴즈비츠 공식 웹사이트",
     category: "회사 웹사이트",
     period: "2025 – 2026",
-    tagline: "프론트엔드부터 FastAPI·MongoDB 백엔드, 배포 설정까지 혼자 만든 회사 웹사이트입니다.",
-    outcome: { before: "2.06MB", after: "53KB", caption: "초기 폰트 다운로드 97% 축소" },
-    stack: ["Next.js", "FastAPI", "MongoDB", "Docker", "Jenkins", "AWS", "GA4/GTM"],
+    tagline:
+      "프론트엔드부터 FastAPI·MongoDB 백엔드, 배포 설정까지 혼자 만든 회사 웹사이트입니다.",
+    outcome: {
+      before: "2.06MB",
+      after: "53KB",
+      caption: "초기 폰트 다운로드 97% 축소",
+    },
+    stack: [
+      "Next.js",
+      "FastAPI",
+      "MongoDB",
+      "GA4/GTM",
+    ],
     highlights: [
       {
         title: "공식 웹사이트 풀스택 구현",
@@ -206,26 +260,56 @@ export const timeline: TimelineItem[] = [
   {
     company: "스퀴즈비츠",
     period: "2022.10 – 현재",
-    summary: "Owlite, FitsOnChips, Yetter, 공식 웹사이트의 프론트엔드를 담당하고 있습니다.",
+    summary:
+      "Owlite, FitsOnChips, Yetter, 공식 웹사이트의 프론트엔드를 담당하고 있습니다.",
     current: true,
   },
-  { company: "데이터메이커", period: "2022.05 – 2022.09", summary: "Vue로 데이터 라벨링 현황 대시보드와 교육용 튜토리얼 사이트를 만들었습니다." },
+  {
+    company: "데이터메이커",
+    period: "2022.05 – 2022.09",
+    summary:
+      "Vue로 데이터 라벨링 현황 대시보드와 교육용 튜토리얼 사이트를 만들었습니다.",
+  },
   {
     company: "위피엔피",
     period: "2020.09 – 2022.01",
-    summary: "인쇄물 자동 견적 시스템, 생산 관리 MES, Adobe CEP 플러그인을 React와 PHP로 개발했습니다.",
+    summary:
+      "인쇄물 자동 견적 시스템, 생산 관리 MES, Adobe CEP 플러그인을 React와 PHP로 개발했습니다.",
   },
-  { company: "메타빌드", period: "2017.02 – 2018.05", summary: "식약처·공정위 정부과제에서 기관 간 데이터 연계 시스템의 화면을 개발했습니다." },
+  {
+    company: "메타빌드",
+    period: "2017.02 – 2018.05",
+    summary:
+      "식약처·공정위 정부과제에서 기관 간 데이터 연계 시스템의 화면을 개발했습니다.",
+  },
 ];
 
-export const education = ["건양대학교 융합IT학부(ICT전공) 졸업", "정보처리기사 · SQLD · 리눅스마스터 2급"];
+export const education = [
+  "건양대학교 융합IT학부(ICT전공) 졸업",
+  "정보처리기사 · SQLD · 리눅스마스터 2급",
+];
 
 export const skills: SkillGroup[] = [
-  { title: "자주 쓰는", items: ["TypeScript", "React", "Next.js", "TanStack Query", "Zustand", "Tailwind CSS", "Radix UI"] },
-  { title: "데이터를 그릴 때", items: ["SVG", "dagre.js", "Nivo", "AG Grid"] },
-  { title: "디자인 시스템", items: ["Storybook", "Style Dictionary", "MUI", "Emotion", "shadcn/ui"] },
-  { title: "백엔드와 운영", items: ["FastAPI", "MongoDB", "MySQL", "Docker", "Jenkins", "AWS", "Sentry", "GA4/GTM"] },
-  { title: "함께 일하는", items: ["GitHub", "Claude", "Cursor AI"] },
+  {
+    title: "프론트엔드",
+    items: ["TypeScript", "React", "Next.js", "TanStack Query", "Zustand"],
+  },
+  { title: "데이터 시각화", items: ["SVG", "dagre.js", "Nivo", "AG Grid"] },
+  {
+    title: "디자인 시스템",
+    items: [
+      "Tailwind CSS",
+      "Radix UI",
+      "Emotion",
+      "Storybook",
+      "Style Dictionary",
+    ],
+  },
+  {
+    title: "백엔드와 운영",
+    items: ["FastAPI", "MongoDB", "Sentry", "GA4/GTM"],
+  },
+  { title: "AI 도구", items: ["Claude", "Cursor AI"] },
 ];
 
 export function findWork(id: Work["id"]) {
