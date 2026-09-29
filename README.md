@@ -23,10 +23,12 @@ npm run dev     # http://localhost:3000
 
 | 항목 | 설명 |
 | --- | --- |
-| `profile` | 이름, 한 줄 소개, 자기소개, 링크(GitHub · 이메일 · 블로그) |
-| `experiences` | 경력. `start`/`end`는 `YYYY.MM`, 재직 중이면 `end` 생략 |
-| `projects` | 프로젝트 카드 |
+| `profile` | 이름, 한 줄 소개, 자기소개, 링크(이메일 · GitHub) |
+| `stats` | 첫 화면 아래 주요 성과 카드 |
+| `companies` | 회사별 경력과 그 안의 프로젝트. `start`/`end`는 `YYYY.MM`, 재직 중이면 `end` 생략 |
 | `skills` | 기술 분류별 목록 |
-| `education`, `activities` | 학력, 활동 · 수상 |
+| `education`, `certificates` | 교육, 자격증 |
+
+문장 안에 `**굵게**`로 쓰면 화면에서 강조됩니다.
 
 헤더 메뉴는 `src/lib/site.ts`의 `sections`에서 바꿉니다.
