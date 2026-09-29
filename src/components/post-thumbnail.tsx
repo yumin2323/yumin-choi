@@ -55,7 +55,7 @@ function ModelGraph() {
   const last = { x: cols.at(-1)!, y: rows.at(-1)![path.at(-1)!] };
 
   return (
-    <g transform="translate(600 330) scale(1.3) translate(-600 -330)">
+    <g transform="translate(600 315) scale(1.2) translate(-600 -330)">
       {edges.map(({ hot, ...e }, i) => (
         <line key={i} {...e} stroke={hot ? accent : line} strokeWidth={hot ? 3 : 1.5} strokeLinecap="round" />
       ))}
@@ -102,7 +102,7 @@ function SchemaForm() {
         const hot = links.includes(i);
         return (
           <g key={i}>
-            <rect x={x} y={y - 7} width={key} height={14} rx={7} fill={hot ? accent : muted} opacity={hot ? 1 : 0.55} />
+            <rect x={x} y={y - 7} width={key} height={14} rx={7} fill={hot ? accent : muted} fillOpacity={hot ? 1 : 0.55} />
             {value > 0 && <rect x={x + key + 16} y={y - 7} width={value} height={14} rx={7} fill={line} />}
           </g>
         );
@@ -157,7 +157,7 @@ function EventBatch() {
   const updated = 1; // 다시 그려지는 노드
 
   return (
-    <g transform="translate(600 315) scale(1.1) translate(-600 -335)">
+    <g transform="translate(0 -5)">
       {/* 이벤트 타임라인 */}
       <line x1={140} y1={190} x2={1060} y2={190} stroke={line} strokeWidth={2} />
       <rect x={batch[0]} y={150} width={batch[1] - batch[0]} height={80} rx={12} fill={accentSoft} stroke={accent} strokeWidth={2} />
@@ -171,7 +171,7 @@ function EventBatch() {
             </g>
           );
         }
-        return <circle key={x} cx={x} cy={190} r={inBatch ? 9 : 7} fill={inBatch ? accent : muted} opacity={inBatch ? 1 : 0.5} />;
+        return <circle key={x} cx={x} cy={190} r={inBatch ? 9 : 7} fill={inBatch ? accent : muted} fillOpacity={inBatch ? 1 : 0.5} />;
       })}
 
       {/* 묶음 → 바뀐 노드 */}
@@ -194,7 +194,7 @@ function EventBatch() {
           <g key={x}>
             <rect x={x - 80} y={390} width={160} height={100} rx={12} fill={hot ? accentSoft : bg} stroke={hot ? accent : line} strokeWidth={hot ? 2.5 : 2} />
             <rect x={x - 55} y={420} width={hot ? 90 : 70} height={12} rx={6} fill={hot ? accent : line} />
-            <rect x={x - 55} y={446} width={hot ? 110 : 100} height={12} rx={6} fill={hot ? accent : line} opacity={hot ? 0.45 : 1} />
+            <rect x={x - 55} y={446} width={hot ? 110 : 100} height={12} rx={6} fill={hot ? accent : line} fillOpacity={hot ? 0.45 : 1} />
           </g>
         );
       })}
