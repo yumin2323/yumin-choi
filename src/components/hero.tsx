@@ -1,43 +1,49 @@
-import { AvatarIllustration } from "@/components/avatar-illustration";
+import { Button } from "@/components/section";
 import { profile } from "@/lib/resume";
 import styles from "./hero.module.css";
 
-// 아바타 주위에 떠 있는 기술 칩 (위치는 CSS 모듈의 nth-child로 지정)
-const FLOATING_CHIPS = ["React", "Next.js", "TypeScript"];
-
 export function Hero() {
   return (
-    <section className="grid items-center gap-10 pt-14 pb-20 sm:pt-20 sm:pb-24 md:grid-cols-[minmax(0,1fr)_240px] md:gap-14">
-      <div>
-        <a
-          href={profile.now.href}
-          target="_blank"
-          rel="noreferrer"
-          className="inline-flex items-center gap-2 rounded-full bg-soft py-1.5 pr-3.5 pl-3 text-sm text-sub hover:text-heading"
-        >
-          <span className={styles.pulse} aria-hidden="true" />
-          <span className="font-bold text-heading">{profile.now.label}</span>
-          {profile.now.text}
-        </a>
-        <h1 className="mt-6 text-[30px] leading-[1.35] font-bold tracking-[-0.035em] whitespace-pre-line text-heading sm:text-[42px]">
-          {profile.greeting}
-        </h1>
-        <div className="mt-6 max-w-[34em] space-y-3 text-[17px] leading-[1.8] text-sub">
-          {profile.intro.map((line) => (
-            <p key={line}>{line}</p>
-          ))}
-        </div>
-      </div>
+    <section className="pt-16 pb-16 sm:pt-24 sm:pb-24">
+      <p className="text-[15px] font-medium text-sub sm:text-[17px]">{profile.greeting}</p>
+      <h1 className="mt-5 text-[34px] leading-[1.2] font-bold tracking-[-0.045em] whitespace-pre-line text-heading sm:text-[54px] md:text-[64px]">
+        {profile.headline}
+      </h1>
 
-      <div className={styles.panel} aria-hidden="true">
-        <div className={styles.avatar}>
-          <AvatarIllustration />
+      <div className="mt-12 grid gap-10 border-t border-line pt-10 sm:mt-16 md:grid-cols-[minmax(0,1fr)_300px] md:gap-14">
+        <div>
+          <div className="max-w-[36em] space-y-4 text-base leading-[1.8] text-sub">
+            {profile.intro.map((line) => (
+              <p key={line}>{line}</p>
+            ))}
+          </div>
+          <div className="mt-8 flex flex-wrap gap-2">
+            <Button href="#works">프로젝트 보기</Button>
+            {profile.links.map(({ label, href }) => (
+              <Button key={href} href={href} variant="outline" external>
+                {label} ↗
+              </Button>
+            ))}
+          </div>
         </div>
-        {FLOATING_CHIPS.map((label) => (
-          <span key={label} className={styles.chip}>
-            {label}
-          </span>
-        ))}
+
+        <dl className="grid grid-cols-[108px_minmax(0,1fr)] gap-x-4 gap-y-3.5 self-start text-[15px]">
+          {profile.facts.map(({ label, value, href }) => (
+            <div key={label} className="contents">
+              <dt className="eyebrow pt-[3px]">{label}</dt>
+              <dd className="font-medium text-heading">
+                {href ? (
+                  <a href={href} target="_blank" rel="noreferrer" className="link-underline inline-flex items-center gap-2">
+                    <span className={styles.pulse} aria-hidden="true" />
+                    {value} <span className="text-gold">↗</span>
+                  </a>
+                ) : (
+                  value
+                )}
+              </dd>
+            </div>
+          ))}
+        </dl>
       </div>
     </section>
   );

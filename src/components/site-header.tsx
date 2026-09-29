@@ -16,7 +16,7 @@ export function SiteHeader() {
               <a
                 key={id}
                 href={`/#${id}`}
-                className="rounded-lg px-3 py-1.5 text-[15px] font-medium text-sub hover:bg-soft hover:text-heading"
+                className="px-3 py-1.5 text-[15px] font-medium text-sub transition-colors hover:text-heading"
               >
                 {label}
               </a>

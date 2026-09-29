@@ -7,7 +7,7 @@ export function SiteFooter() {
         <span>
           © {new Date().getFullYear()} {profile.name}
         </span>
-        <span>Next.js와 Tailwind CSS로 만들었어요</span>
+        <span>Next.js와 Tailwind CSS로 만들었습니다</span>
       </div>
     </footer>
   );
