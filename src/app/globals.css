@@ -1,0 +1,91 @@
+@import "tailwindcss";
+
+/* dark: 변형을 시스템 설정이 아닌 <html data-theme="dark"> 기준으로 (next-themes가 설정, src/app/layout.tsx) */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+:root {
+  color-scheme: light;
+  --background: #ffffff;
+  --soft: #f4f3f8;
+  --line: #e7e5ee;
+  --heading: #1d1b26;
+  --body: #3a3746;
+  --sub: #575366;
+  --muted: #736f82;
+  --accent: #6d5bd0;
+  --accent-soft: #efecfb;
+
+  /* 카드와 일러스트 */
+  --card: #ffffff;
+  --ill-line: #d9d6e3;
+  --tint-violet: #ece8fb;
+  --tint-green: #e4f4ec;
+  --tint-orange: #ffeee3;
+  --green: #2fa36b;
+  --orange: #ee8434;
+  --ill-shadow: 0 1cqw 4cqw rgb(60 40 120 / 0.12);
+  --stack-shadow: 0 24px 60px rgb(60 40 120 / 0.18);
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --background: #18171d;
+  --soft: #232129;
+  --line: #2f2d37;
+  --heading: #f3f2f7;
+  --body: #d4d1dc;
+  --sub: #b3afbf;
+  --muted: #8a8698;
+  --accent: #a496f0;
+  --accent-soft: #2a2544;
+
+  --card: #2b2934;
+  --ill-line: #4a4656;
+  --tint-violet: #241f3d;
+  --tint-green: #182c22;
+  --tint-orange: #33251a;
+  --green: #4cc38a;
+  --orange: #f5a15f;
+  --ill-shadow: 0 1cqw 4cqw rgb(0 0 0 / 0.35);
+  --stack-shadow: 0 24px 60px rgb(0 0 0 / 0.45);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-soft: var(--soft);
+  --color-line: var(--line);
+  --color-heading: var(--heading);
+  --color-body: var(--body);
+  --color-sub: var(--sub);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+
+  --font-sans: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", "Segoe UI", sans-serif;
+  --font-mono: SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+@layer base {
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+    border-radius: 6px;
+  }
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* 고정 헤더(60px)에 섹션 제목이 가려지지 않도록 */
+  section[id] {
+    scroll-margin-top: 76px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+  }
+}
