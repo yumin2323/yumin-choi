@@ -44,4 +44,6 @@ export const metadata = {
 };
 ```
 
+A post's thumbnail is an inline SVG registered under its slug in `src/components/post-thumbnail.tsx`; posts without one simply show no image.
+
 Header navigation items are defined in `nav` in `src/lib/site.ts`.

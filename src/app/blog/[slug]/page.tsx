@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { PostThumbnail } from "@/components/post-thumbnail";
 import { ArrowLink } from "@/components/section";
 import { formatDate, getPost, getPosts } from "@/lib/blog";
 import { findWork } from "@/lib/resume";
@@ -30,6 +31,8 @@ export default async function PostPage({ params }: PageProps<"/blog/[slug]">) {
         </h1>
         <p className="mt-4 text-[17px] leading-[1.8] text-sub">{post.description}</p>
       </header>
+
+      <PostThumbnail slug={post.slug} className="mt-10" />
 
       <div className="mt-12 border-t border-line pt-4 text-[16.5px] leading-[1.9] text-body">
         <Content />

@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import Link from "next/link";
+import { hasThumbnail, PostThumbnail } from "@/components/post-thumbnail";
 import { COLUMNS, SHELL, TextLink } from "@/components/section";
 import { formatDate, getPosts } from "@/lib/blog";
 
@@ -27,6 +29,12 @@ export default async function BlogPage() {
               <time dateTime={post.date}>{formatDate(post.date)}</time>
             </p>
             <article className="max-w-[680px]">
+              {/* 썸네일은 제목 링크와 같은 곳으로 가지만, 스크린 리더에는 제목 링크 하나만 읽히게 */}
+              {hasThumbnail(post.slug) && (
+                <Link href={`/blog/${post.slug}`} tabIndex={-1} aria-hidden="true" className="mb-6 block">
+                  <PostThumbnail slug={post.slug} />
+                </Link>
+              )}
               <h2 className="text-[20px] leading-[1.45] font-semibold tracking-[-0.025em] text-balance text-heading">
                 <TextLink href={`/blog/${post.slug}`}>{post.title}</TextLink>
               </h2>
