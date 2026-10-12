@@ -216,6 +216,7 @@ export const works: Work[] = [
     name: "스퀴즈비츠 공식 웹사이트",
     category: "회사 공식 웹사이트",
     period: "2025 – 2026",
+    url: "https://squeezebits.com/",
     outcome: {
       before: "2.06MB",
       after: "53KB",
