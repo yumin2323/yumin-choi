@@ -21,10 +21,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     // next-themes가 하이드레이션 전에 <html>에 data-theme을 넣으므로 서버 HTML과 달라도 경고하지 않음
     <html lang="ko" className={plex.variable} suppressHydrationWarning>
-      <body className="bg-background px-5 font-sans text-base/[1.6] text-body antialiased break-keep wrap-break-word">
+      <body className="flex min-h-dvh flex-col bg-background px-5 font-sans text-base/[1.6] text-body antialiased break-keep wrap-break-word">
         <ThemeProvider attribute="data-theme" defaultTheme="system" enableSystem disableTransitionOnChange>
           <SiteHeader />
-          <main>{children}</main>
+          {/* 내용이 짧은 페이지(404 등)에서도 푸터가 뷰포트 맨 아래에 붙도록 남는 높이를 채움 */}
+          <main className="flex-1">{children}</main>
           <SiteFooter />
         </ThemeProvider>
       </body>
