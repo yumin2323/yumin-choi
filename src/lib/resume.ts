@@ -261,7 +261,7 @@ export const works: Work[] = [
 
 /** 사이드 프로젝트 섹션 첫머리의 한 문장. AI와 함께 만들 때 맡은 역할을 밝힌다 */
 export const sideProjectsSummary =
-  "기획·설계와 제품 의사결정, 검증은 직접 수행하고 구현 과정에 AI 코딩 에이전트를 활용한 개인 프로젝트입니다.";
+  "기획·설계·구현 과정에서 AI 코딩 에이전트를 활용하고, 제품 방향과 주요 의사결정·검증은 직접 수행했습니다.";
 
 /** 회사 밖에서 만든 프로젝트. 홈의 대표 작업(works)과는 따로 관리한다 */
 export const sideProjects: Work[] = [
@@ -272,7 +272,7 @@ export const sideProjects: Work[] = [
     status: "출시 준비 중",
     period: "2026",
     motive:
-      "읽은 책을 기억하고 싶지만 매번 독후감을 쓰기는 부담스러워, 책을 등록하는 것만으로 기록이 되고 남기고 싶은 순간에만 문장을 더하는 앱을 만들었습니다.",
+      "독후감 작성 부담 없이 책 등록만으로 독서 기록을 남기고, 필요한 순간에만 문장을 추가하는 iOS 앱",
     media: {
       shape: "phone",
       items: [
@@ -300,7 +300,7 @@ export const sideProjects: Work[] = [
     highlights: [
       {
         title: "오프라인 우선 저장과 기기 간 동기화",
-        text: "기록을 로컬 SQLite에 먼저 쓰고 변경 대기열과 서버 커서로 동기화하며, 행 단위 최신 우선·삭제 우선 규칙으로 충돌 처리",
+        text: "네트워크 연결 여부와 관계없이 기록할 수 있도록 SQLite에 우선 저장하고, 변경 대기열과 서버 커서로 동기화하며 행 단위 최신 우선·삭제 우선 규칙으로 충돌 처리",
       },
       {
         title: "도서 검색 프록시",
@@ -308,7 +308,7 @@ export const sideProjects: Work[] = [
       },
       {
         title: "완료 기준을 테스트로 검증",
-        text: "기획서의 완료 기준을 Jest 578개와 DB 테스트(pgTAP) 47개로 확인하며 AI가 작성한 코드를 검수",
+        text: "기획 단계에서 정의한 완료 기준을 Jest 578개와 pgTAP 47개 테스트로 자동 검증",
       },
     ],
   },
@@ -318,7 +318,7 @@ export const sideProjects: Work[] = [
     category: "AI 애니메이션 제작 도구",
     period: "2026",
     motive:
-      "캐릭터 설정과 스타일 프롬프트를 저장해 두고, 샷별 생성 결과를 한곳에서 관리할 수 있는 도구를 만들었습니다.",
+      "여러 생성 모델을 오가며 캐릭터 설정·프롬프트·샷별 결과를 반복 관리하는 불편을 줄이기 위해 만든 AI 애니메이션 제작 도구",
     media: {
       shape: "screen",
       items: [
@@ -338,15 +338,19 @@ export const sideProjects: Work[] = [
     highlights: [
       {
         title: "아이디어에서 MP4까지 5단계 제작 흐름",
-        text: "아이디어를 샷으로 분해하고 장면 그림, 영상, 소리 생성을 거쳐 ffmpeg로 내보내기",
+        text: "아이디어를 샷으로 분해하고 이미지·영상·오디오 생성을 거쳐 ffmpeg로 MP4 내보내기",
       },
       {
         title: "바이블 기반 프롬프트 조합",
         text: "캐릭터·배경·스타일 설정을 한 번 정의해 두고 샷마다 프롬프트를 자동 조합해 일관성 유지",
       },
       {
-        title: "생성 작업과 Take 관리",
-        text: "이미지·영상·오디오 Provider를 추상화하고, 생성 진행을 폴링하며 채택한 Take를 낙관적으로 반영",
+        title: "생성 Provider 추상화",
+        text: "이미지·영상·오디오 생성 API를 공통 인터페이스로 추상화해 Provider 교체가 제작 흐름에 영향을 주지 않도록 설계",
+      },
+      {
+        title: "샷별 Take 관리",
+        text: "샷마다 여러 생성 결과를 Take로 보존하고 비교·채택할 수 있도록 상태 구조 설계",
       },
     ],
   },
