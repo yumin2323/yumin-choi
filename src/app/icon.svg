@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">
+  <!-- 홈 히어로 아바타(src/components/avatar.tsx)와 같은 도형. 색은 globals.css의 avatar 변수 값을 옮겨 왔고, 파비콘은 사이트 토글이 아닌 OS 테마를 따른다 -->
+  <style>
+    :root { --bg: #dce7f0; --hair: #1c2638; --shirt: #355979; --collar: #ffffff; --skin: #f3d6c2; --neck: #e6c0a7; --blush: #e8a296; --mouth: #a8645b; --gold: #b9955a; }
+    @media (prefers-color-scheme: dark) {
+      :root { --bg: #223a4f; --hair: #0b121b; --shirt: #5b83a8; --collar: #e9eef3; --skin: #eccbb5; --neck: #d6ad93; --blush: #d98f84; --mouth: #95564e; --gold: #d0ae72; }
+    }
+  </style>
+  <clipPath id="c"><circle cx="60" cy="60" r="60" /></clipPath>
+  <g clip-path="url(#c)">
+    <rect width="120" height="120" fill="var(--bg)" />
+    <path d="M32 58 C31 33 45 21 60 21 C75 21 89 33 88 58 L90 104 L30 104 Z" fill="var(--hair)" />
+    <rect x="53" y="70" width="14" height="18" rx="4" fill="var(--neck)" />
+    <path d="M22 124 C22 99 38 87 60 87 C82 87 98 99 98 124 Z" fill="var(--shirt)" />
+    <path d="M50 87.5 Q60 99 70 87.5 Z" fill="var(--collar)" />
+    <circle cx="42" cy="57" r="3.6" fill="var(--skin)" />
+    <circle cx="78" cy="57" r="3.6" fill="var(--skin)" />
+    <ellipse cx="60" cy="55" rx="18" ry="20" fill="var(--skin)" />
+    <path d="M41 54 C38 36 49 29 60.5 29.5 C72 30 82 37 79 54 C75 45.5 67.5 41 58 41 C51 41.5 45 46 41 54 Z" fill="var(--hair)" />
+    <rect x="69" y="34.5" width="9" height="3" rx="1.5" transform="rotate(-24 73.5 36)" fill="var(--gold)" />
+    <g fill="none" stroke="var(--hair)" stroke-width="1.6">
+      <circle cx="52.5" cy="57" r="6" />
+      <circle cx="67.5" cy="57" r="6" />
+      <path d="M58.5 57 H61.5" />
+    </g>
+    <circle cx="52.5" cy="57.5" r="1.5" fill="var(--hair)" />
+    <circle cx="67.5" cy="57.5" r="1.5" fill="var(--hair)" />
+    <ellipse cx="46.5" cy="65" rx="2.8" ry="1.6" fill="var(--blush)" opacity="0.5" />
+    <ellipse cx="73.5" cy="65" rx="2.8" ry="1.6" fill="var(--blush)" opacity="0.5" />
+    <path d="M57 67 Q60 69.5 63 67" fill="none" stroke="var(--mouth)" stroke-width="1.6" stroke-linecap="round" />
+  </g>
+</svg>
