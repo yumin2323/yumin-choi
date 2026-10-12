@@ -117,7 +117,7 @@ export const works: Work[] = [
     period: "2025 – 현재",
     url: "https://yetter.ai/",
     tagline:
-      "노드를 이어 이미지와 비디오를 생성하는 AI 서비스입니다. 프론트엔드를 처음부터 설계했습니다.",
+      "노드를 이어 이미지와 비디오를 생성하는 AI 서비스입니다. 프론트엔드를 1인 담당으로 처음부터 설계했습니다.",
     outcome: {
       before: "모델 수",
       after: "입력 타입 수",
@@ -161,17 +161,17 @@ export const works: Work[] = [
     category: "모델 분석 도구",
     period: "2022 – 2025",
     tagline:
-      "딥러닝 모델의 구조를 그래프로 탐색하고 양자화 설정을 다루는 모델 분석 서비스입니다.",
+      "딥러닝 모델의 구조를 그래프로 탐색하고 양자화 설정을 다루는 모델 분석 서비스입니다. 2025년에 서비스를 종료했습니다.",
     outcome: {
       before: "172.64초",
       after: "18.85초",
-      caption: "대규모 모델 그래프 렌더링 시간 89% 단축",
+      caption: "대규모 모델 그래프의 최초 레이아웃 계산 시간 89% 단축",
     },
     stack: ["React", "SVG", "Redux", "Emotion", "MUI"],
     highlights: [
       {
-        title: "대규모 모델 그래프 렌더링 시간 89% 단축",
-        text: "Stable Diffusion UNet XL 기준 렌더링 시간을 **172.64초에서 18.85초로 단축**",
+        title: "대규모 모델 그래프 최초 레이아웃 계산 시간 89% 단축",
+        text: "Stable Diffusion UNet XL 기준, 그래프를 처음 여는 레이아웃 계산 1회 시간을 **172.64초에서 18.85초로 단축**",
         details: [
           "SVG와 HTML DOM을 결합한 그래프 뷰어에서 대규모 모델(노드 4,000개 이상) 처리 시 수 분의 지연 발생",
           "그래프 규모에 따라 레이아웃 알고리즘을 분기하고, O(n²) 배열 탐색과 재귀 처리 등 주요 병목 제거",
@@ -194,7 +194,7 @@ export const works: Work[] = [
     category: "LLM 벤치마크",
     period: "2023 – 2025",
     tagline:
-      "LLM 벤치마크를 실행하고 모델·하드웨어별 성능을 비교하는 서비스입니다.",
+      "LLM 벤치마크를 실행하고 모델·하드웨어별 성능을 비교하는 서비스입니다. 2025년에 서비스를 종료했습니다.",
     outcome: {
       before: "셀 수만큼",
       after: "1건",
@@ -263,7 +263,7 @@ export const timeline: TimelineItem[] = [
     company: "스퀴즈비츠",
     period: "2022.10 – 현재",
     summary:
-      "Owlite, FitsOnChips, Yetter, 공식 웹사이트의 프론트엔드를 담당하고 있습니다.",
+      "프론트엔드 1인 담당으로 Owlite, FitsOnChips, Yetter, 공식 웹사이트를 처음부터 만들었습니다.",
     current: true,
   },
   {
