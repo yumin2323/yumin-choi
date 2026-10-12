@@ -73,7 +73,6 @@ export const expertise: Expertise[] = [
       "대규모 그래프",
       "워크플로우 에디터",
       "데이터 그리드",
-      "다단계 설정 화면",
     ],
   },
   {
@@ -83,25 +82,24 @@ export const expertise: Expertise[] = [
       "렌더링 병목 분석",
       "상태 관리 구조 개선",
       "실시간 이벤트 처리",
-      "데이터 흐름 최적화",
     ],
   },
   {
     title: "제품 전체를 보는 개발",
     text: "화면에서 그치지 않고 서비스가 운영되는 전 과정을 함께 봅니다.",
-    items: ["프론트엔드 구현", "API 설계와 연동", "배포와 운영", "모니터링"],
+    items: ["API 설계와 연동", "배포와 운영", "모니터링"],
   },
 ];
 
 export const selectedWork: SelectedWork[] = [
   {
     title: "대규모 데이터를 빠르게 그립니다",
-    text: "4,000개가 넘는 노드를 처리하는 모델 그래프의 렌더링 시간을 172.64초에서 18.85초로 줄였습니다.",
+    text: "4,000개가 넘는 노드를 처리하는 모델 그래프에서 레이아웃과 탐색의 병목을 측정으로 찾아 제거했습니다.",
     work: "owlite",
   },
   {
     title: "반복 작업을 없애는 구조를 만듭니다",
-    text: "OpenAPI 스키마로 입력 화면을 자동 생성해, 모델 추가 비용이 모델 수가 아닌 입력 타입 종류 수에 비례하도록 바꿨습니다. 도입 후 5개월간 새 모델은 스키마만으로 폼이 만들어졌습니다.",
+    text: "OpenAPI 스키마로 모델 입력 화면을 자동 생성하는 구조를 만들었습니다. 도입 후 5개월간 새 모델은 입력 타입과 위젯 추가 없이 스키마만으로 폼이 만들어졌습니다.",
     work: "yetter",
   },
   {
@@ -197,6 +195,11 @@ export const works: Work[] = [
     period: "2023 – 2025",
     tagline:
       "LLM 벤치마크를 실행하고 모델·하드웨어별 성능을 비교하는 서비스입니다.",
+    outcome: {
+      before: "셀 수만큼",
+      after: "1건",
+      caption: "다중 셀 붙여넣기 시 서버 요청",
+    },
     stack: ["AG Grid", "Nivo", "React", "Redux", "Emotion", "MUI"],
     highlights: [
       {
@@ -308,7 +311,6 @@ export const skills: SkillGroup[] = [
     title: "백엔드와 운영",
     items: ["FastAPI", "MongoDB", "Sentry", "GA4/GTM"],
   },
-  { title: "AI 도구", items: ["Claude", "Cursor AI"] },
 ];
 
 export function findWork(id: Work["id"]) {
