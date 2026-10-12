@@ -121,7 +121,7 @@ function WorkItem({ work, n }: { work: Work; n: number }) {
         {work.motive && <p className={`mt-4 text-[15px] leading-[1.8] text-sub ${READING}`}>{work.motive}</p>}
         {work.media && (
           <ul
-            className={`mt-8 grid gap-4 sm:gap-6 ${work.media.shape === "phone" ? "max-w-[560px] grid-cols-3" : "sm:grid-cols-2"}`}
+            className={`mt-8 grid gap-4 sm:gap-6 ${work.media.shape === "phone" ? "max-w-[560px] grid-cols-3" : "grid-cols-2"}`}
           >
             {work.media.items.map((item) => (
               <li key={item.image}>
@@ -154,14 +154,14 @@ function WorkItem({ work, n }: { work: Work; n: number }) {
   );
 }
 
-/** 화면 캡처 한 장. 영상은 GIF처럼 소리 없이 반복 재생한다 */
+/** 화면 캡처 한 장. 영상은 GIF처럼 소리 없이 반복 재생하고, 인쇄할 때는 정지 화면으로 바꾼다 */
 function Shot({ item, name, shape }: { item: Media; name: string; shape: MediaSet["shape"] }) {
   const label = `${name} ${item.caption} 화면`;
   const [width, height] = shape === "phone" ? [600, 1305] : [1200, 750];
-  const className = `block w-full border border-line ${shape === "phone" ? "aspect-[600/1305]" : "aspect-[16/10]"}`;
+  const className = `w-full border border-line ${shape === "phone" ? "aspect-[600/1305]" : "aspect-[16/10]"}`;
   return (
-    <figure>
-      {item.video ? (
+    <figure className="break-inside-avoid">
+      {item.video && (
         <video
           src={item.video}
           poster={item.image}
@@ -171,11 +171,17 @@ function Shot({ item, name, shape }: { item: Media; name: string; shape: MediaSe
           muted
           playsInline
           preload="metadata"
-          className={className}
+          className={`block print:hidden ${className}`}
         />
-      ) : (
-        <img src={item.image} alt={label} width={width} height={height} loading="lazy" className={className} />
       )}
+      <img
+        src={item.image}
+        alt={label}
+        width={width}
+        height={height}
+        loading={item.video ? "eager" : "lazy"}
+        className={`${item.video ? "hidden print:block" : "block"} ${className}`}
+      />
       <figcaption className="mt-2 text-[13px] leading-[1.6] text-muted">{item.caption}</figcaption>
     </figure>
   );
