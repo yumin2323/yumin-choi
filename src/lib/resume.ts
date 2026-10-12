@@ -216,6 +216,7 @@ export const works: Work[] = [
     name: "스퀴즈비츠 공식 웹사이트",
     category: "회사 공식 웹사이트",
     period: "2025 – 2026",
+    url: "https://squeezebits.com/",
     outcome: {
       before: "2.06MB",
       after: "53KB",
@@ -230,7 +231,7 @@ export const works: Work[] = [
     highlights: [
       {
         title: "공식 웹사이트 풀스택 단독 구현",
-        text: "전 페이지 프론트엔드와 FastAPI·MongoDB 백엔드를 구현하고, Dockerfile과 Jenkins 설정 파일을 구성해 배포 및 서비스 동작 검증",
+        text: "전 페이지 프론트엔드와 FastAPI·MongoDB 백엔드를 구현하고, Dockerfile·Jenkins 설정 파일 수정 및 배포 후 서비스 동작 검증",
       },
       {
         title: "외부 블로그 콘텐츠 자동 동기화",
@@ -248,9 +249,9 @@ export const works: Work[] = [
   },
 ];
 
-/** 경력 섹션 첫머리의 한 문장. 경력 전체를 훑은 뒤 혼자 0에서 1까지 완성한 최근 경험을 앞세운다 */
+/** 경력 섹션 첫머리의 한 문장. 최근 프론트엔드 1인 담당 경험의 범위를 명확히 드러낸다 */
 export const careerSummary =
-  "7년 가까이 정부과제, 제조 MES, AI 서비스까지 여러 도메인의 프론트엔드를 맡아 왔고, 최근 4년은 프론트엔드 1인 담당으로 네 제품을 처음부터 정식 서비스까지 혼자 완성했습니다.";
+  "7년 가까이 정부과제, 제조 MES, AI 서비스까지 여러 도메인의 프론트엔드를 맡아 왔고, 최근 4년은 프론트엔드 1인 담당으로 네 제품의 프론트엔드를 초기 설계부터 정식 서비스 운영까지 맡았습니다.";
 
 export const timeline: TimelineItem[] = [
   {
