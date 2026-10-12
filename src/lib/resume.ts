@@ -13,11 +13,12 @@ export type Work = {
   /** Resume 페이지의 앵커(/resume#id) */
   id: string;
   name: string;
-  /** 이름 옆에 붙는 짧은 분류 */
+  /** 이름 아래 붙는 짧은 분류. 홈 메타 줄에도 쓰인다 */
   category: string;
+  /** 서비스 종료 같은 현재 상태. Resume에서만 분류 뒤에 붙는다 */
+  status?: string;
   period: string;
   url?: string;
-  tagline: string;
   outcome?: Outcome;
   /** 사용자·고객 관점의 제품 성과 한 줄 */
   impact?: string;
@@ -118,8 +119,6 @@ export const works: Work[] = [
     category: "생성형 AI 플랫폼",
     period: "2025 – 현재",
     url: "https://yetter.ai/",
-    tagline:
-      "노드를 이어 이미지와 비디오를 생성하는 AI 서비스입니다. 프론트엔드를 1인 담당으로 처음부터 설계했습니다.",
     outcome: {
       before: "모델 수",
       after: "입력 타입 수",
@@ -137,23 +136,19 @@ export const works: Work[] = [
     ],
     highlights: [
       {
-        title: "생성형 AI 서비스 프론트엔드 설계·구축 주도",
-        text: "기술 스택 선정부터 아키텍처, 인증, 디자인 시스템과 모니터링 환경을 담당하고 배포 설정 및 동작 검증 수행",
+        title: "프론트엔드 1인 담당으로 처음부터 설계·구축",
+        text: "기술 스택 선정, 아키텍처, 인증부터 디자인 토큰·공통 컴포넌트·Storybook, Sentry 모니터링, 배포 설정까지 담당",
       },
       {
         title: "실시간 워크플로우 화면 성능·안정성 개선",
-        text: "SSE 이벤트를 묶어 처리하고 변경된 노드만 다시 렌더링하도록 최적화했으며, 이전 실행 결과가 최신 화면을 덮어쓰는 문제 방지",
+        text: "노드를 이어 만든 생성 워크플로우를 실행할 때 서버에서 쏟아지는 진행 이벤트(SSE)를 프레임 단위로 묶어 반영하고 바뀐 노드만 다시 그리도록 최적화했으며, 이전 실행 결과가 최신 화면을 덮어쓰는 경쟁 문제 방지",
       },
       {
         title: "OpenAPI 기반 모델 입력 화면 자동 생성",
-        text: "모델별 입력 스키마를 해석해 폼과 중첩 데이터를 자동 구성하고, 모델 추가 비용을 **모델 수가 아닌 입력 타입 종류 수에 비례**하도록 전환",
+        text: "모델별 입력 스키마를 해석해 폼과 중첩 데이터를 자동 구성",
         details: [
           "도입 후 5개월간 입력 타입과 위젯 추가 없이, 새로 들어온 모델은 스키마만으로 폼 생성",
         ],
-      },
-      {
-        title: "디자인 시스템·운영 기반 구축",
-        text: "디자인 토큰, 공통 컴포넌트, Storybook, Sentry 환경을 구축해 UI 일관성과 운영 안정성 향상",
       },
     ],
     post: "json-schema-type-widget-mismatch",
@@ -161,10 +156,9 @@ export const works: Work[] = [
   {
     id: "owlite",
     name: "Owlite",
-    category: "모델 분석 도구",
+    category: "딥러닝 모델 벤치마크 및 뷰어 서비스",
+    status: "2026년 8월 서비스 종료",
     period: "2022 – 2025",
-    tagline:
-      "딥러닝 모델의 구조를 그래프로 탐색하고 양자화 설정을 다루는 모델 분석 서비스입니다. 2025년에 서비스를 종료했습니다.",
     outcome: {
       before: "172.64초",
       after: "18.85초",
@@ -174,19 +168,15 @@ export const works: Work[] = [
     stack: ["React", "SVG", "Redux", "Emotion", "MUI"],
     highlights: [
       {
-        title: "대규모 모델 그래프 최초 레이아웃 계산 시간 89% 단축",
-        text: "Stable Diffusion UNet XL 기준, 그래프를 처음 여는 레이아웃 계산 1회 시간을 **172.64초에서 18.85초로 단축**",
-        details: [
-          "SVG와 HTML DOM을 결합한 그래프 뷰어에서 대규모 모델(노드 4,000개 이상) 처리 시 수 분의 지연 발생",
-          "그래프 규모에 따라 레이아웃 알고리즘을 분기하고, O(n²) 배열 탐색과 재귀 처리 등 주요 병목 제거",
-        ],
+        title: "대규모 모델 그래프 최초 레이아웃 계산 병목 제거",
+        text: "SVG와 HTML DOM을 결합한 그래프 뷰어가 노드 4,000개 이상 모델을 열 때 수 분씩 멈추던 문제를, 그래프 규모별 레이아웃 알고리즘 분기와 O(n²) 배열 탐색·재귀 처리 제거로 해결",
       },
       {
-        title: "3단계 우선순위 기반 모델 양자화 설정 시스템 구현",
-        text: "전체 모델·연산자 유형·개별 레이어 설정이 순서에 따라 덮어써지는 구조 구현",
+        title: "예외만 지정하면 되는 계층형 양자화 설정 화면 구현",
+        text: "모델 경량화(양자화) 옵션을 전체 모델 → 연산자 유형 → 개별 레이어 순으로 좁은 범위가 넓은 범위를 덮어쓰는 구조로 설계해, 수천 개 레이어에 CSS 캐스케이드처럼 예외만 지정하면 되도록 함",
         details: [
-          "다중 레이어 일괄 편집, Replace All, 추천 설정 연동, YAML export 제공",
-          "복잡한 설정 상태를 Redux와 기능별 모듈로 분리해 유지보수성 개선",
+          "다중 선택 일괄 편집, 전체 바꾸기, 추천값 한 번에 적용, YAML 내보내기",
+          "설정 상태를 Redux 기능별 모듈로 분리해 유지보수성 개선",
         ],
       },
     ],
@@ -195,10 +185,9 @@ export const works: Work[] = [
   {
     id: "fitsonchips",
     name: "FitsOnChips",
-    category: "LLM 벤치마크",
+    category: "LLM 벤치마크 실행 및 비교 서비스",
+    status: "2026년 8월 서비스 종료",
     period: "2023 – 2025",
-    tagline:
-      "LLM 벤치마크를 실행하고 모델·하드웨어별 성능을 비교하는 서비스입니다. 2025년에 서비스를 종료했습니다.",
     outcome: {
       before: "셀 수만큼",
       after: "1건",
@@ -209,14 +198,11 @@ export const works: Work[] = [
     highlights: [
       {
         title: "AG Grid 기반 스프레드시트 편집 기능 구현",
-        text: "Community 버전에서 범위 선택, 필 핸들, Excel 호환 복사·붙여넣기, Undo, 키보드 선택을 직접 구현하고 모든 셀 변경을 단일 처리 구조로 통합",
-        details: [
-          "백엔드 벌크 API 도입 시 붙여넣은 셀 수와 관계없이 서버 요청 1건으로 처리하도록 확장",
-        ],
+        text: "Community 버전에서 범위 선택, 필 핸들, Excel 호환 복사·붙여넣기, Undo, 키보드 선택을 직접 구현하고 모든 셀 변경을 단일 처리 구조로 통합하고 백엔드 벌크 API에 연결",
       },
       {
-        title: "다차원 벤치마크 시각화 구현",
-        text: "Nivo 기본 레이어를 확장해 지표별 log·reverse 축과 사용자 지정 범위를 지원하고, 데이터 검증과 호버 영역 개선으로 복잡한 결과를 안정적으로 비교",
+        title: "모델·하드웨어별 벤치마크 결과 비교 차트 구현",
+        text: "지표마다 값의 자릿수가 크게 다른 결과를 한 화면에서 비교할 수 있도록 차트 라이브러리(Nivo) 레이어를 직접 확장해 로그 축·역방향 축·사용자 지정 범위를 지원하고, 잘못된 데이터가 차트를 깨뜨리지 않도록 검증과 마우스 호버 판정 영역 개선",
       },
       {
         title: "디자인·다국어 반영 자동화",
@@ -227,10 +213,8 @@ export const works: Work[] = [
   {
     id: "squeezebits-web",
     name: "스퀴즈비츠 공식 웹사이트",
-    category: "회사 웹사이트",
+    category: "회사 공식 웹사이트",
     period: "2025 – 2026",
-    tagline:
-      "프론트엔드부터 FastAPI·MongoDB 백엔드, 배포 설정까지 혼자 만든 회사 웹사이트입니다.",
     outcome: {
       before: "2.06MB",
       after: "53KB",
@@ -244,12 +228,12 @@ export const works: Work[] = [
     ],
     highlights: [
       {
-        title: "공식 웹사이트 풀스택 구현",
+        title: "공식 웹사이트 풀스택 단독 구현",
         text: "전 페이지 프론트엔드와 FastAPI·MongoDB 백엔드를 구현하고, Dockerfile과 Jenkins 설정 파일을 구성해 배포 및 서비스 동작 검증",
       },
       {
         title: "외부 블로그 콘텐츠 자동 동기화",
-        text: "MongoDB 복합 키 기반 커서 페이지네이션과 RSC 첫 화면 SSR·무한 스크롤을 결합하고, API 장애 시 정적 콘텐츠로 대체하는 fallback 적용",
+        text: "외부 블로그 글을 가져와 첫 화면은 서버에서 렌더링(RSC)하고 이후는 커서 기반 무한 스크롤로 이어 붙이며, API 장애 시 정적 콘텐츠로 대체하는 fallback 적용",
       },
       {
         title: "마케팅 데이터·공지 운영 이관",
@@ -257,7 +241,7 @@ export const works: Work[] = [
       },
       {
         title: "폰트 로딩 최적화",
-        text: "서브셋 분리와 unicode-range, 로케일별 동적 import로 초기 폰트 다운로드를 **2.06MB에서 53KB로 97% 축소**",
+        text: "서브셋 분리와 unicode-range, 로케일별 동적 import로 초기 폰트 다운로드 축소",
       },
     ],
   },
