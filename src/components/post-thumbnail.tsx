@@ -64,6 +64,14 @@ const thumbnails: Record<string, { label: string; draw: () => ReactNode }> = {
     label: "패키지와 앱의 코드가 CSS 한 벌로 모이고 중복된 한 벌은 빠지는 그림",
     draw: SingleStylesheet,
   },
+  "aggrid-community-range-selection": {
+    label: "표에서 두 칸 범위가 아래로 반복해 채워진 선택 범위와 채우기 핸들을 보여 주는 그림",
+    draw: CellRange,
+  },
+  "nivo-parallel-log-reverse-axes": {
+    label: "평행좌표 차트에서 log 눈금을 가진 축 하나와 그 눈금을 지나는 선 하나를 보여 주는 그림",
+    draw: ParallelLogAxis,
+  },
 };
 
 export function hasThumbnail(slug: string) {
@@ -381,6 +389,141 @@ function SingleStylesheet() {
       {[200, 140].map((w, i) => (
         <Bar key={i} x={dup.x + 32} y={dup.y + 48 + i * 44} w={w} fill={C.muted} />
       ))}
+    </g>
+  );
+}
+
+/** 셀 범위 선택: 표에서 두 칸 범위가 아래로 반복해 채워진 선택 범위, 오른쪽 아래에 채우기 핸들 */
+function CellRange() {
+  const numW = 88; // 행 번호 열
+  const headH = 66;
+  const cols = 4;
+  const rows = 6;
+  const colW = (SAFE.right - SAFE.left - numW) / cols;
+  const rowH = (SAFE.bottom - SAFE.top - headH) / rows;
+  const colX = (c: number) => SAFE.left + numW + c * colW;
+  const rowY = (r: number) => SAFE.top + headH + r * rowH;
+
+  // 셀 값 막대 길이. 0은 빈 칸. 선택 범위(1~4행, 1~2열)는 위 두 행이 아래로 반복된다
+  const cells = [
+    [120, 84, 100, 64],
+    [96, 110, 72, 88],
+    [132, 76, 120, 56],
+    [0, 110, 72, 0],
+    [0, 76, 120, 0],
+    [0, 0, 0, 0],
+  ];
+  const range = { r0: 1, r1: 4, c0: 1, c1: 2 };
+  const inRange = (r: number, c: number) => r >= range.r0 && r <= range.r1 && c >= range.c0 && c <= range.c1;
+  const sel = {
+    x: colX(range.c0),
+    y: rowY(range.r0),
+    w: (range.c1 - range.c0 + 1) * colW,
+    h: (range.r1 - range.r0 + 1) * rowH,
+  };
+
+  return (
+    <g>
+      <rect
+        x={SAFE.left}
+        y={SAFE.top}
+        width={SAFE.right - SAFE.left}
+        height={SAFE.bottom - SAFE.top}
+        rx={RADIUS.panel}
+        fill={C.bg}
+        stroke={C.line}
+        strokeWidth={STROKE.base}
+      />
+      {Array.from({ length: rows }, (_, r) => (
+        <line key={`h${r}`} x1={SAFE.left} x2={SAFE.right} y1={rowY(r)} y2={rowY(r)} stroke={C.line} strokeWidth={STROKE.base} />
+      ))}
+      {Array.from({ length: cols }, (_, c) => (
+        <line key={`v${c}`} x1={colX(c)} x2={colX(c)} y1={SAFE.top} y2={SAFE.bottom} stroke={C.line} strokeWidth={STROKE.base} />
+      ))}
+
+      {/* 열 이름과 행 번호 */}
+      {[96, 72, 112, 80].map((w, c) => (
+        <Bar key={c} x={colX(c) + 28} y={SAFE.top + headH / 2} w={w} fill={C.muted} />
+      ))}
+      {Array.from({ length: rows }, (_, r) => (
+        <circle key={r} cx={SAFE.left + numW / 2} cy={rowY(r) + rowH / 2} r={DOT.base} fill={C.line} />
+      ))}
+
+      {/* 선택 범위 */}
+      <Box x={sel.x} y={sel.y} w={sel.w} h={sel.h} hot />
+
+      {cells.map((row, r) =>
+        row.map((w, c) =>
+          w > 0 ? (
+            <Bar key={`${r}-${c}`} x={colX(c) + 28} y={rowY(r) + rowH / 2} w={w} fill={inRange(r, c) ? C.accent : C.line} />
+          ) : null,
+        ),
+      )}
+
+      {/* 채우기 핸들 */}
+      <circle cx={sel.x + sel.w} cy={sel.y + sel.h} r={DOT.strong} fill={C.accent} stroke={C.bg} strokeWidth={STROKE.strong} />
+      <GoldDot x={sel.x + sel.w} y={sel.y} />
+    </g>
+  );
+}
+
+/** 평행좌표 축: 축마다 자기 스케일을 갖고, log 눈금을 가진 축 하나와 그 눈금을 지나는 선 하나가 강조된다 */
+function ParallelLogAxis() {
+  const axes = 4;
+  const axisX = (i: number) => SAFE.left + (i * (SAFE.right - SAFE.left)) / (axes - 1);
+  // 축 위 위치. 0이 아래, 1이 위
+  const y = (f: number) => SAFE.bottom - f * (SAFE.bottom - SAFE.top);
+  const logAxis = 1;
+  // 1~100의 log 눈금: 1, 2, 3, 5, 10, 20, 30, 50, 100
+  const logTicks = [1, 2, 3, 5, 10, 20, 30, 50, 100].map((v) => Math.log10(v) / 2);
+  const linearTicks = [0, 0.25, 0.5, 0.75, 1];
+
+  const series = [
+    [0.9, 0.85, 0.3, 0.7],
+    [0.7, 0.5, 0.55, 0.2],
+    [0.5, 0.95, 0.15, 0.55],
+    [0.35, 0.24, 0.8, 0.35],
+    [0.1, 0.15, 0.62, 0.9],
+    [0.6, 0, 0.92, 0.08],
+  ];
+  const hot = [0.2, logTicks[6], 0.4, 0.8]; // log 축에서 30 눈금을 지나는 선
+
+  const pathOf = (fs: number[]) =>
+    fs
+      .map((f, i) => {
+        if (i === 0) return `M ${axisX(0)} ${y(f)}`;
+        const mx = (axisX(i - 1) + axisX(i)) / 2;
+        return `C ${mx} ${y(fs[i - 1])}, ${mx} ${y(f)}, ${axisX(i)} ${y(f)}`;
+      })
+      .join(" ");
+
+  return (
+    <g>
+      {series.map((fs, i) => (
+        <path key={i} d={pathOf(fs)} fill="none" stroke={C.line} strokeWidth={STROKE.base} />
+      ))}
+
+      {Array.from({ length: axes }, (_, i) => {
+        const isLog = i === logAxis;
+        return (
+          <g key={i}>
+            <line
+              x1={axisX(i)}
+              x2={axisX(i)}
+              y1={SAFE.top}
+              y2={SAFE.bottom}
+              stroke={isLog ? C.accent : C.muted}
+              strokeWidth={isLog ? STROKE.strong : STROKE.base}
+            />
+            {(isLog ? logTicks : linearTicks).map((f) => (
+              <circle key={f} cx={axisX(i)} cy={y(f)} r={DOT.base} fill={isLog ? C.accent : C.muted} />
+            ))}
+          </g>
+        );
+      })}
+
+      <path d={pathOf(hot)} fill="none" stroke={C.accent} strokeWidth={STROKE.strong} strokeLinecap="round" />
+      <GoldDot x={axisX(axes - 1)} y={y(hot[axes - 1])} />
     </g>
   );
 }
