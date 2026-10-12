@@ -69,6 +69,11 @@ export default function ResumePage() {
                     <OutcomeLine outcome={work.outcome} />
                   </div>
                 )}
+                {work.impact && (
+                  <p className="mt-2 text-[15px] leading-[1.8] text-sub">
+                    제품 성과<span className="ml-2 font-semibold text-heading">{work.impact}</span>
+                  </p>
+                )}
                 <div className="mt-6">
                   <Highlights items={work.highlights} />
                 </div>

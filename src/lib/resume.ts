@@ -19,6 +19,8 @@ export type Work = {
   url?: string;
   tagline: string;
   outcome?: Outcome;
+  /** 사용자·고객 관점의 제품 성과 한 줄 */
+  impact?: string;
   stack: string[];
   highlights: Highlight[];
   /** 관련 블로그 글의 slug (content/blog/<slug>.mdx) */
@@ -123,6 +125,7 @@ export const works: Work[] = [
       after: "입력 타입 수",
       caption: "모델 추가 비용이 비례하는 기준 전환",
     },
+    impact: "Modular와 MAX 프레임워크 확장을 위한 MOU 체결",
     stack: [
       "Next.js",
       "TypeScript",
@@ -167,6 +170,7 @@ export const works: Work[] = [
       after: "18.85초",
       caption: "대규모 모델 그래프의 최초 레이아웃 계산 시간 89% 단축",
     },
+    impact: "PoC 5건을 정식 도입으로 전환",
     stack: ["React", "SVG", "Redux", "Emotion", "MUI"],
     highlights: [
       {
@@ -200,6 +204,7 @@ export const works: Work[] = [
       after: "1건",
       caption: "다중 셀 붙여넣기 시 서버 요청",
     },
+    impact: "가입 사용자 100명 이상 확보",
     stack: ["AG Grid", "Nivo", "React", "Redux", "Emotion", "MUI"],
     highlights: [
       {
