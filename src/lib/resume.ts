@@ -209,6 +209,7 @@ export const works: Work[] = [
         text: "Figma 토큰과 다국어 문구를 GitHub Actions로 변환·반영해 기획자·디자이너가 개발자 도움 없이 변경사항을 반영할 수 있는 구조 구축",
       },
     ],
+    post: "aggrid-community-range-selection",
   },
   {
     id: "squeezebits-web",
