@@ -1,6 +1,6 @@
 # yumin-choi
 
-프론트엔드 개발자 최유민의 개인 사이트입니다. → **https://yumin-choi.vercel.app**
+프론트엔드 개발자 최유민의 개인 사이트입니다. → **https://yuminchoi.com**
 
 사이트 전체가 이 레포에 있습니다. Home에서는 저를 소개하고, Resume에서는 전체 경력을 정리하며(PDF로 저장 가능), Blog에는 인터랙티브 데모를 곁들인 문제 해결 기록을 남깁니다.
 
