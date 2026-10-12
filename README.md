@@ -46,7 +46,7 @@ export const metadata = {
 };
 ```
 
-글은 실제 업무에서 겪은 프론트엔드 문제(렌더링 병목, 스트리밍 상태 처리, 차트·그리드 커스터마이징, 스키마 기반 폼 등)와 그 해결 과정을 다룹니다. 대부분의 글에는 **인터랙티브 데모**(`src/components/demos/`)가 있습니다. 데모는 실제 문제를 공개 가능한 데이터와 코드로 다시 만든 작은 재현 예제라서, 원래 제품 밖에서도 공유할 수 있습니다. 데모는 `src/mdx-components.tsx`에 등록되어 있어 글에서 `<StreamBatchDemo />`처럼 import 없이 바로 씁니다.
+글은 실제 업무에서 겪은 프론트엔드 문제(렌더링 병목, 스트리밍 상태 처리, 차트·그리드 커스터마이징, 스키마 기반 폼 등)와 그 해결 과정을 다룹니다. 대부분의 글에는 **인터랙티브 데모**(`src/components/demos/`)가 있습니다. 데모는 실제 문제를 공개 가능한 데이터와 코드로 다시 만든 작은 재현 예제입니다. 데모는 `src/mdx-components.tsx`에 등록되어 있어 글에서 `<StreamBatchDemo />`처럼 import 없이 바로 씁니다.
 
 글 썸네일은 `src/components/post-thumbnail.tsx`에 slug별 인라인 SVG로 들어 있습니다. 추가하거나 바꿀 때는 [docs/blog-thumbnail-guide.md](docs/blog-thumbnail-guide.md)를 따릅니다.
 
