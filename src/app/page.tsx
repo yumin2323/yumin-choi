@@ -61,7 +61,7 @@ export default async function HomePage() {
                 </p>
                 <p className="mt-3 flex flex-wrap gap-x-6 gap-y-1">
                   <ArrowLink href={`/resume#${work.id}`}>경력에서 보기</ArrowLink>
-                  {work.post && <ArrowLink href={`/blog/${work.post}`}>관련 글</ArrowLink>}
+                  {work.post && <ArrowLink href={`/blog/${work.post}`}>문제 해결 과정과 데모</ArrowLink>}
                 </p>
               </li>
             );
