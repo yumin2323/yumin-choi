@@ -9,6 +9,12 @@ export type Highlight = { title?: string; text: string; details?: string[] };
 /** 프로젝트의 대표 성과 하나. 설명 뒤에 이전 값 → 개선된 값으로 보여준다 */
 export type Outcome = { before: string; after: string; caption: string };
 
+/** 프로젝트 화면 캡처. video가 있으면 image는 재생 전 정지 화면으로 쓴다 (파일은 public/ 아래) */
+export type Media = { image: string; video?: string; caption: string };
+
+/** 캡처 묶음. shape이 phone이면 세로 화면 세 칸, screen이면 가로 화면 두 칸으로 놓인다 */
+export type MediaSet = { shape: "phone" | "screen"; items: Media[] };
+
 export type Work = {
   /** Resume 페이지의 앵커(/resume#id) */
   id: string;
@@ -22,6 +28,10 @@ export type Work = {
   outcome?: Outcome;
   /** 사용자·고객 관점의 제품 성과 한 줄 */
   impact?: string;
+  /** 왜 만들었는지 한 문장. 사이드 프로젝트에서 쓴다 */
+  motive?: string;
+  /** 화면 캡처 */
+  media?: MediaSet;
   stack: string[];
   highlights: Highlight[];
   /** 관련 블로그 글의 slug (content/blog/<slug>.mdx) */
@@ -244,6 +254,99 @@ export const works: Work[] = [
       {
         title: "폰트 로딩 최적화",
         text: "서브셋 분리와 unicode-range, 로케일별 동적 import로 초기 폰트 다운로드 축소",
+      },
+    ],
+  },
+];
+
+/** 사이드 프로젝트 섹션 첫머리의 한 문장. AI와 함께 만들 때 맡은 역할을 밝힌다 */
+export const sideProjectsSummary =
+  "기획·설계와 제품 의사결정, 검증은 직접 수행하고 구현 과정에 AI 코딩 에이전트를 활용한 개인 프로젝트입니다.";
+
+/** 회사 밖에서 만든 프로젝트. 홈의 대표 작업(works)과는 따로 관리한다 */
+export const sideProjects: Work[] = [
+  {
+    id: "marglet",
+    name: "Marglet",
+    category: "독서 기록 iOS 앱",
+    status: "출시 준비 중",
+    period: "2026",
+    motive:
+      "읽은 책을 기억하고 싶지만 매번 독후감을 쓰기는 부담스러워, 책을 등록하는 것만으로 기록이 되고 남기고 싶은 순간에만 문장을 더하는 앱을 만들었습니다.",
+    media: {
+      shape: "phone",
+      items: [
+        { image: "/works/marglet/home.webp", caption: "홈" },
+        {
+          image: "/works/marglet/search-poster.webp",
+          video: "/works/marglet/search.mp4",
+          caption: "책 검색과 담기",
+        },
+        {
+          image: "/works/marglet/theme-poster.webp",
+          video: "/works/marglet/theme.mp4",
+          caption: "테마와 잉크 색 바꾸기",
+        },
+      ],
+    },
+    stack: [
+      "Expo",
+      "React Native",
+      "TypeScript",
+      "expo-sqlite",
+      "Supabase",
+      "Jest",
+    ],
+    highlights: [
+      {
+        title: "오프라인 우선 저장과 기기 간 동기화",
+        text: "기록을 로컬 SQLite에 먼저 쓰고 변경 대기열과 서버 커서로 동기화하며, 행 단위 최신 우선·삭제 우선 규칙으로 충돌 처리",
+      },
+      {
+        title: "도서 검색 프록시",
+        text: "Supabase Edge Function으로 카카오 책 검색 키를 서버에만 두고 계정·IP별 하루 호출 제한 적용",
+      },
+      {
+        title: "완료 기준을 테스트로 검증",
+        text: "기획서의 완료 기준을 Jest 578개와 DB 테스트(pgTAP) 47개로 확인하며 AI가 작성한 코드를 검수",
+      },
+    ],
+  },
+  {
+    id: "crinkle-studio",
+    name: "Crinkle Studio",
+    category: "AI 애니메이션 제작 도구",
+    period: "2026",
+    motive:
+      "캐릭터 설정과 스타일 프롬프트를 저장해 두고, 샷별 생성 결과를 한곳에서 관리할 수 있는 도구를 만들었습니다.",
+    media: {
+      shape: "screen",
+      items: [
+        { image: "/works/crinkle-studio/character-bible.webp", caption: "캐릭터 바이블" },
+        { image: "/works/crinkle-studio/story.webp", caption: "아이디어를 샷으로 나눈 샷 보드" },
+        { image: "/works/crinkle-studio/shot.webp", caption: "샷별 Take 비교와 채택" },
+        { image: "/works/crinkle-studio/finish.webp", caption: "완성 영상 미리보기와 MP4 내보내기" },
+      ],
+    },
+    stack: [
+      "Next.js",
+      "TypeScript",
+      "TanStack Query",
+      "Redux",
+      "Supabase",
+    ],
+    highlights: [
+      {
+        title: "아이디어에서 MP4까지 5단계 제작 흐름",
+        text: "아이디어를 샷으로 분해하고 장면 그림, 영상, 소리 생성을 거쳐 ffmpeg로 내보내기",
+      },
+      {
+        title: "바이블 기반 프롬프트 조합",
+        text: "캐릭터·배경·스타일 설정을 한 번 정의해 두고 샷마다 프롬프트를 자동 조합해 일관성 유지",
+      },
+      {
+        title: "생성 작업과 Take 관리",
+        text: "이미지·영상·오디오 Provider를 추상화하고, 생성 진행을 폴링하며 채택한 Take를 낙관적으로 반영",
       },
     ],
   },
