@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { PrintLink } from "@/components/print-link";
-import { ArrowLink, COLUMNS, Highlights, Num, SHELL, Section, TextLink } from "@/components/section";
+import { ArrowLink, COLUMNS, Highlights, Num, OutcomeLine, SHELL, Section, TextLink } from "@/components/section";
 import { education, profile, skills, timeline, works } from "@/lib/resume";
 
 export const metadata: Metadata = {
@@ -65,12 +65,9 @@ export default function ResumePage() {
                 <p className="mt-1 text-sm text-muted">{work.category}</p>
                 <p className="mt-4 text-[15px] leading-[1.8] text-sub">{work.tagline}</p>
                 {work.outcome && (
-                  <p className="mt-2 text-[15px] leading-[1.8] text-sub">
-                    {work.outcome.caption}
-                    <span className="ml-2 font-semibold whitespace-nowrap text-heading tabular-nums">
-                      {work.outcome.before} → {work.outcome.after}
-                    </span>
-                  </p>
+                  <div className="mt-2">
+                    <OutcomeLine outcome={work.outcome} />
+                  </div>
                 )}
                 <div className="mt-6">
                   <Highlights items={work.highlights} />
@@ -92,7 +89,7 @@ export default function ResumePage() {
           {skills.map((group) => (
             <div key={group.title} className="sm:grid sm:grid-cols-[140px_minmax(0,1fr)] sm:gap-4">
               <dt className="text-muted">{group.title}</dt>
-              <dd className="text-sub">{group.items.join(" · ")}</dd>
+              <dd className="text-body">{group.items.join(" · ")}</dd>
             </div>
           ))}
         </dl>

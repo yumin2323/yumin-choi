@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
-import type { Highlight } from "@/lib/resume";
+import type { Highlight, Outcome } from "@/lib/resume";
 
 /** 사이트 전체 폭. 긴 문단은 안에서 READING으로 다시 좁힌다 */
 export const SHELL = "mx-auto max-w-[960px]";
@@ -45,12 +45,24 @@ export function TextLink({ href, children }: { href: string; children: ReactNode
 /** "관련 글 →" 같은 이동 링크. 화살표만 골드, hover 시 골드 밑줄이 그어짐 */
 export function ArrowLink({ href, children }: { href: string; children: ReactNode }) {
   return (
-    <Link href={href} className="group inline-flex items-baseline gap-1.5 text-sm text-sub transition-colors hover:text-heading">
+    <Link href={href} className="group inline-flex items-baseline gap-1.5 text-sm text-body transition-colors hover:text-heading">
       <span className="link-underline">{children}</span>
       <span aria-hidden="true" className="text-gold transition-transform group-hover:translate-x-0.5 motion-reduce:transition-none">
         →
       </span>
     </Link>
+  );
+}
+
+/** 프로젝트의 대표 성과 한 줄. 설명 뒤에 "이전 값 → 개선된 값"을 굵게 붙인다 */
+export function OutcomeLine({ outcome }: { outcome: Outcome }) {
+  return (
+    <p className="text-[15px] leading-[1.8] text-sub">
+      {outcome.caption}
+      <span className="ml-2 font-semibold whitespace-nowrap text-heading tabular-nums">
+        {outcome.before} → {outcome.after}
+      </span>
+    </p>
   );
 }
 

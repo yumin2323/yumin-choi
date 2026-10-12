@@ -18,13 +18,15 @@ export function Hero() {
           </p>
         </div>
         <p className="mt-6 text-sm text-muted">{profile.coreStack.join(" · ")}</p>
+        {/* 채용 목적상 Resume가 먼저, GitHub, 이메일 순 */}
         <p className="mt-10 flex flex-wrap gap-x-6 gap-y-2 text-[15px]">
-          <TextLink href={`mailto:${profile.email}`}>{profile.email}</TextLink>
+          <TextLink href="/resume">Resume</TextLink>
           {profile.links.map(({ label, href }) => (
             <TextLink key={href} href={href}>
               {label}
             </TextLink>
           ))}
+          <TextLink href={`mailto:${profile.email}`}>{profile.email}</TextLink>
         </p>
       </div>
     </section>
