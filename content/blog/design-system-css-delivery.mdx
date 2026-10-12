@@ -1,0 +1,222 @@
+export const metadata = {
+  title: "디자인 시스템 CSS를 사전 빌드로 배포했다가 다시 앱의 Tailwind로 돌아온 과정",
+  description: "앱 안에 있던 UI 컴포넌트를 디자인 시스템 패키지로 옮기면서, 앱의 Tailwind가 패키지 CSS를 컴파일하던 구조를 설정 부담을 줄이려고 사전 빌드 CSS 배포로 바꾸고 세 번 고쳤다. 그러다 실제 앱에서 CSS가 두 벌 실리는 것을 보고 앱의 Tailwind가 한 번에 컴파일하는 구조로 돌아왔다.",
+  date: "2026-10-08",
+  tags: ["아키텍처", "디자인 시스템", "Tailwind"],
+};
+
+## 문제 상황
+
+사내 앱 안에 있던 UI 컴포넌트(Radix + cva 기반 React 컴포넌트 38개)를 별도 디자인 시스템 패키지로 옮겼다. 컴포넌트 코드를 옮기는 것보다 오래 걸린 건 CSS였다. 패키지를 쓰려면 소비 앱의 전역 CSS에 여러 줄을 맞춰 넣어야 했다. 그림자·브레이크포인트 유틸리티 블록, `@custom-variant dark` 선언, 그리고 패키지 소스를 가리키는 `@source` 경로다.
+
+문제는 이 중 하나를 빠뜨리거나 경로를 잘못 적어도 아무 검사에도 걸리지 않는다는 점이었다. typecheck, lint, 컴포넌트 테스트가 전부 통과했다. 증상은 Sheet에 그림자가 없거나 DropdownMenu가 모달 밑에 깔리는 것, 혹은 다크 모드 스타일이 통째로 안 먹는 것뿐이었다. 스토리를 눈으로 열어 보지 않으면 그대로 배포됐고, 실제로 소비 앱 한 곳이 이 상태로 빌드되고 있었다.
+
+패키지 쪽에도 같은 종류의 구멍이 있었다. 존재하지 않는 토큰 이름(`bg-warning-subtle`)이나 Tailwind가 해석하지 못하는 문법(`hover:not(:focus-within):border-*`)을 쓴 클래스가 CSS를 하나도 만들지 않은 채 검사를 통과하고 있었다.
+
+## 기존 구조
+
+패키지는 빌드된 스타일시트가 아니라 **Tailwind 클래스 이름이 박힌 소스**를 배포했다. `exports`가 `./src/index.ts`, `./src/components/*.tsx`를 그대로 가리켰고, CSS는 소비 앱의 Tailwind가 패키지 소스를 스캔해서 만들어 내는 구조였다. TypeScript 소스를 배포하니 Next 앱에는 `transpilePackages`, 테스트에는 Vitest `server.deps.inline` 설정도 필요했다.
+
+소비 앱의 전역 CSS는 대략 이런 모양이어야 했다.
+
+```css
+@import "tailwindcss";
+@import "@scope/ui/tokens.css";
+@import "@scope/ui/utilities.css";
+@import "tw-animate-css";
+@custom-variant dark (&:where(.dark, .dark *));
+@source "../../node_modules/@scope/ui/src";
+```
+
+`@source` 경로는 그 지시어가 쓰인 CSS 파일 기준 상대경로라, 앱마다 `globals.css` 위치에서 `node_modules`까지 단계를 세어 적어야 했다.
+
+## 문제 원인
+
+Tailwind v4는 CSS 파일 주변을 자동 탐색하지만 gitignore 대상인 `node_modules`는 건너뛴다. 그래서 소비 앱에서는 `@source`만이 패키지 소스 스캔을 성립시킨다. 이 줄이 없거나 경로가 틀리면, 앱 코드에서 직접 쓰지 않고 **패키지 안에서만 쓰는 클래스**(Sheet의 `shadow-8`·`z-[1300]`, DropdownMenu의 `z-[1400]`, Tooltip의 `wrap-anywhere` 등)가 최종 CSS에서 조용히 빠진다. `dark` 변형도 같아서, 선언이 없으면 패키지의 `dark:*` 클래스가 전부 출력되지 않는다.
+
+이 실패를 검사가 못 잡은 이유도 같은 곳에 있었다. 패키지 레포 안에서는 `src/components`가 gitignore 대상이 아니라 Tailwind 자동 탐색에 그냥 걸린다. 레포 안에서 돌리는 어떤 검사도 "소비 앱에서는 이 클래스가 생성되지 않는다"는 조건을 재현하지 못했다. "클래스가 쓰였다"와 "그 클래스의 CSS가 만들어졌다"는 별개의 일인데, 검사는 앞쪽만 보고 있었다.
+
+## 고려한 해결 방법
+
+한 번에 답에 간 게 아니라 다섯 단계를 거쳤다. 다만 CSS를 누가 만드는지가 바뀐 건 3단계 한 번이고, 나머지는 같은 방식 안에서 고친 것이다.
+
+**앱의 Tailwind가 컴파일하는 방식을 유지하며, 앱이 적을 줄을 패키지로 옮겼다.**
+
+1. **복붙하던 유틸리티를 패키지에서 배포.** 그림자(`shadow-2/4/8/16`)와 브레이크포인트·`max-w-modal-*`를 앱마다 `globals.css`에 복사하던 것을 `utilities.css`로 묶어 배포했다. 하지만 `@source`와 `dark` 변형은 여전히 앱 몫이었다.
+2. **`@source`와 `dark` 변형을 `utilities.css`가 소유.** `@source`는 지시어가 쓰인 파일 기준으로 해석되므로, 패키지 안에서 `..`(패키지의 `src/`)을 가리키면 소비 앱의 `globals.css` 위치와 무관하게 항상 맞는다. 앱이 경로를 셀 필요가 없어졌다. 남은 건 앱에 Tailwind가 있어야 한다는 전제와 import 몇 줄이었다.
+
+**사전 빌드 CSS로 바꾸고, 앱 CSS와 부딪히는 문제를 고쳤다.** 목표는 "Tailwind가 없는 앱도 import만 하면 되는 패키지"였다.
+
+3. **CSS를 사전 빌드해서 배포하되, 전체를 `@layer`로 감싸기.** Tailwind 의존을 없애려고 패키지가 CSS를 미리 만들어 함께 배포하기로 했다. 앱 CSS가 항상 이기도록 산출물 전체를 `@layer ds`로 감쌌다. 그런데 pack 스모크에서 create-next-app 기본 `globals.css`의 `* { padding: 0 }` 같은 전역 리셋이 레이어 안 유틸리티를 이겨, 기본 템플릿에서 컴포넌트 여백이 전부 사라졌다.
+4. **유틸리티만 레이어 밖으로.** 토큰과 리셋만 `@layer ds`에 남기고 유틸리티를 레이어 밖으로 뺐다. 레이어 밖 규칙끼리는 specificity로 겨루므로, 클래스 셀렉터인 유틸리티가 `*` 리셋을 이겨 스모크 앱은 정상으로 돌아왔다. 그런데 Tailwind를 쓰는 실제 앱에 적용하자 사이드바가 사라졌다. 사이드바는 `hidden lg:block`이었는데, 앱 Tailwind와 패키지 CSS가 `.hidden`을 각자 만들었고, 레이어 밖에 있는 패키지 쪽 `.hidden`이 앱의 `@layer utilities` 안에 있는 `lg:block`을 화면 폭과 상관없이 이겼다. 같은 이유로 `p-4 sm:p-6` 같은 반응형 여백, hover·disabled 색 등 앱 소스의 67곳이 의도대로 나오지 않았다.
+5. **클래스에 접두사, Tailwind와 같은 이름의 레이어.** 컴포넌트의 클래스를 전부 `yui:px-3`처럼 바꿔 앱의 `.px-3`과 이름이 겹치지 않게 하고, 패키지 CSS는 토큰을 `theme`, 리셋을 `base`, 유틸리티를 `components` 레이어에 넣었다. Tailwind 앱에서는 이 레이어들이 앱의 같은 이름 레이어와 합쳐져, 패키지 CSS가 항상 앱의 `utilities` 아래에 놓인다. 사이드바도, 반응형 여백도 돌아왔다.
+
+5단계는 실제 앱에서 맞게 동작했지만, 거기까지 가는 데 든 것이 많았다.
+
+- 컴포넌트 소스의 클래스 약 2,900개를 TypeScript AST로 골라 접두사를 붙였다. `"outline"`처럼 variant 이름이면서 유틸리티 이름이기도 한 단어가 있어서, 문자열을 통째로 바꾸면 안 됐다.
+- 전역 preflight를 넣으면 앱의 `h1`·`button`이 바뀌므로 preflight를 `:where(.yui, .yui *)` 범위로 좁히고, 모든 컴포넌트의 최상위 요소에 `yui` 마커 클래스를 붙였다. 마커가 빠지면 브라우저 기본 스타일이 새어 들어오는데 Storybook에서는 보이지 않아서, 모든 export를 렌더링해 마커를 검사하는 테스트가 따로 필요했다.
+- 컴포넌트 JS가 CSS를 스스로 import하게 했더니, Node가 `.css` import를 못 읽어 소비 앱 테스트 46개 파일이 한꺼번에 실패했다. 이걸 `type` 없는 `dist/package.json`으로 피하자 이번엔 번들러가 루트의 `sideEffects`를 잃어 한 페이지의 First Load JS가 181 kB에서 418 kB로 뛰었다.
+
+그리고 실제 앱에서 측정한 결과, CSS가 gzip 기준 33,781 B에서 49,373 B로 46% 늘었다. 이 앱은 자기 화면을 Tailwind로 그리기 때문에 같은 스타일이 앱 CSS(`.flex`)와 패키지 CSS(`.yui\:flex`)에 한 번씩 실린다. 접두사 덕분에 둘이 간섭하지는 않지만 크기는 그대로 든다.
+
+여기서 목표를 다시 봤다. 이 패키지를 쓰는 앱은 모두 Tailwind 앱이었다. Tailwind 없는 앱을 위해 고른 방식이, 실제 소비 앱 전부에 CSS 중복과 접두사·마커 유지 비용을 물리고 있었다. 다른 Tailwind 기반 컴포넌트 라이브러리들도 찾아보니, 대부분 앱의 Tailwind가 라이브러리 경로를 스캔하게 하는 쪽이었다. CSS를 따로 빌드해 import만으로 쓰게 하는 방식은 Tailwind를 쓰지 않는 라이브러리 쪽에 가까웠다.
+
+아래 데모는 각 단계에서 같은 패키지 Card가 두 종류의 앱에서 어떻게 그려지는지를, 실제 cascade layer와 specificity로 계산해 보여 준다.
+
+<CssDeliveryDemo />
+
+## 선택한 방법
+
+**Tailwind 앱만 지원하고, 앱의 Tailwind가 앱과 패키지의 클래스를 한 번에 컴파일하게 했다.** 소비 앱은 전역 CSS에 두 줄만 적는다.
+
+```css
+@import "tailwindcss";
+@import "@scope/ui/styles.css";
+```
+
+구조로 보면 2단계로 돌아가되, 소스 대신 빌드된 ESM을 배포한 것이다.
+
+- **패키지는 빌드된 ESM과 Tailwind용 CSS 엔트리를 배포한다.** 엔트리 `styles.css`의 `@source "../../dist"`가 패키지의 빌드 결과를 가리키므로, 앱 위치와 무관하게 패키지 클래스가 스캔된다. 빌드된 JS라 `transpilePackages`도 Vitest 설정도 필요 없다.
+- **CSS는 앱의 빌드에서 한 번만 만들어진다.** 앱과 패키지가 `flex`를 같이 써도 `.flex`는 한 번 나온다. 접두사도, 범위 preflight도, 마커도 필요 없다. 리셋은 앱의 Tailwind preflight가 맡는다.
+- **컴포넌트 JS는 CSS를 import하지 않는다.** `sideEffects: false`로 배럴 tree-shaking이 그대로 동작한다.
+- **패키지 규칙은 전부 Tailwind와 같은 이름의 레이어에 둔다.** 토큰은 `theme`, 폰트 fallback은 `base`다. 앱이 `@layer base`로 재정의하면 이긴다.
+
+대가도 있다. Tailwind v4.1 이상(peer `tailwindcss ^4.1`)이 없는 앱은 쓸 수 없다. 테마도 앱과 공유한다. 패키지 토큰이 `blue`·`gray` 같은 이름의 색을 정의하므로 앱의 `bg-blue-500`도 디자인 시스템 값으로 바뀌고, 다크 모드 값은 토큰의 `.dark` 블록이 정해서 앱의 `@theme` 재정의가 라이트 모드에만 적용된다. 실제 소비 앱이 모두 Tailwind 앱이라 이 대가를 받아들이고, 패키지 README에 적었다.
+
+그리고 이 구조가 다시 조용히 깨지지 않도록, "클래스가 쓰였다"가 아니라 **"CSS가 실제로 만들어졌는가"를 검사하는 계약 테스트**를 같이 묶었다.
+
+## 구현
+
+### 1. CSS 엔트리: 공통 본체와 스캔 대상을 나누기
+
+패키지의 CSS는 공통 본체 `core.css` 하나에 모으고, 무엇을 스캔할지는 엔트리마다 정한다. 앱이 쓰는 `styles.css`는 빌드된 dist를, Storybook이 쓰는 `globals.css`는 컴포넌트 소스를 스캔한다.
+
+```css
+/* styles.css — 앱이 Tailwind 다음에 import */
+@import "./core.css";
+@source "../../dist";
+```
+
+```css
+/* core.css — @import "tailwindcss"와 @source는 넣지 않는다 */
+@import "tw-animate-css";
+@import "./tokens.css" layer(theme) theme(static);
+@import "./tailwind.utilities.css";
+@import "./effect.utilities.css";
+@import "./interaction.utilities.css";
+@import "./breakpoints.css";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@layer base {
+  :root,
+  :host,
+  .dark {
+    --typeface-font-family: Pretendard, -apple-system, system-ui, /* ... */ sans-serif;
+  }
+}
+```
+
+레이어는 `@import`의 `layer()`로 정한다. 토큰 파일의 `.dark` 블록이 레이어 밖에 있으면 앱의 `@layer base` 재정의가 specificity와 무관하게 모두 지기 때문이다. `theme(static)`은 5단계에서 쓰던 설정을 이유를 바꿔 남겼다. 컴포넌트가 쓰지 않는 토큰까지 내보내, 앱 코드가 `var()`로 토큰을 직접 써도 정의가 있게 한다.
+
+`tw-animate-css`는 이 CSS가 import하므로 패키지의 `dependencies`에 둔다. 앱의 Tailwind가 패키지 위치에서 찾기 때문이다. 소비 앱은 이 패키지 때문에 깔던 `tw-animate-css`를 지울 수 있다.
+
+### 2. 빌드된 ESM과 dist 검사
+
+`tsc`로 파일을 1:1로 emit하고, `.d.ts`의 상대 import 확장자를 `.js`로 고친 뒤, dist를 검사해 하나라도 어긋나면 빌드를 실패시킨다.
+
+- 훅을 쓰는 컴포넌트의 `"use client"`가 파일 맨 앞에 남았는가
+- 상대 import가 모두 `.js`로 끝나는가 (Node ESM 해석)
+- dist JS에 CSS import가 없는가 (있으면 앱 Tailwind와 별개의 CSS가 실린다)
+- `styles.css`의 `@source`가 실제로 dist를 가리키고, 그 안에 컴포넌트 JS가 있는가
+- Node에서 CJS 래퍼 객체로 오는 default import가 없는가
+
+마지막 검사는 Node로 패키지를 직접 불러오는 경로에서 나왔다. 소비 앱의 Vitest나 SSR은 패키지를 번들링하지 않고 Node에 넘길 수 있는데, 그러면 CJS 패키지의 default import가 `{ __esModule, default }` 래퍼 객체로 온다. 당시 Carousel이 쓰던 react-slick이 그랬고, 래퍼가 컴포넌트 자리에 들어가 "Element type is invalid … got: object"로 깨졌다. 번들러를 거치는 앱 빌드와 Storybook에서는 드러나지 않았다. 처음에는 default를 한 번 더 꺼내는 헬퍼로 고쳤는데, 이후 Carousel을 패키지에서 빼면서 헬퍼도 지웠다. 검사는 남겼다. 빌드가 dist의 외부 default import를 Node로 실제로 불러 보고, 래퍼로 오는 것이 하나라도 있으면 실패한다.
+
+### 3. CSS 계약 테스트: 소비 앱 조건을 재현해서 컴파일 결과를 검사
+
+계약 테스트는 컴포넌트를 렌더링하지 않고 **Tailwind를 실제로 돌려 나온 CSS**를 검사한다. 입력은 소비 앱의 전역 CSS를 흉내 낸다. 기대값은 하드코딩하지 않고 `src/components`에서 실제로 쓰이는 클래스를 긁어 만든다. 그래서 컴포넌트가 바뀌어도 테스트가 낡지 않는다.
+
+핵심은 `source(none)`이다. 이게 없으면 레포 안에서는 자동 탐색이 컴포넌트를 잡아서, `@source`를 지워도 테스트가 통과해 무의미하다. 자동 탐색을 끄면 패키지가 `node_modules`에 있는 소비 앱 조건이 재현된다.
+
+```ts {4}
+/** 앱 전역 CSS 흉내. 빌드 없이 돌도록 dist 대신 src/components를 스캔 */
+function appInput({ sources = true } = {}) {
+  return [
+    `@import "tailwindcss" source(none);`,
+    `@import "./core.css";`,
+    ...(sources
+      ? [
+          `@source "../components";`,
+          `@source not "../components/*.stories.tsx";`,
+          `@source not "../components/*.test.{ts,tsx}";`,
+        ]
+      : []),
+  ].join("\n");
+}
+
+it("@source가 없으면 컴포넌트 전용 클래스가 빠진다", async () => {
+  // source(none)이 자동 탐색을 실제로 끄고 있다는 음성 대조군
+  const withoutSource = await compile(appInput({ sources: false }));
+  expect(withoutSource.replaceAll("\\", "")).not.toMatch(/\.z-1300(?![\w-])/);
+});
+```
+
+이 입력으로 컴포넌트가 쓰는 그림자·포커스 링·z-index 유틸리티가 모두 출력되는지, 참조하는 `var()`가 모두 정의돼 있는지, `dark:` 변형이 `.dark` 클래스 기반으로 등록되는지, 모든 규칙이 `@layer` 안에 있는지를 검사한다.
+
+테스트가 정말 배선 끊김을 잡는지는 일부러 배선을 끊어서 확인했다. 처음 만든 버전(2단계 시점)에서 `@source`를 지우면 7개, `@custom-variant dark`를 지우면 1개가 실패했고, 복구하면 12개가 모두 통과했다. 이 과정에서 `files` 제외 패턴이 `!src/**/*.test.tsx`뿐이라 `.ts` 테스트 파일이 배포에 실리고, `@source`가 그 파일까지 스캔해 소비 앱 CSS를 오염시키던 문제도 찾아 고쳤다.
+
+계약 테스트는 레포의 `src`를 스캔하므로, 배포본의 `@source "../../dist"`가 `node_modules` 안에서 맞게 해석되는지는 보여 주지 않는다. 그건 pack 스모크가 맡는다. `npm pack`으로 만든 tarball을 Tailwind v4 Vite 앱과 Next 앱에 설치해 빌드하고, 빌드된 CSS에 패키지 전용 클래스(`.z-1300`, `.focus-ring-inset`, `.animate-in`)가 있는지 확인한다.
+
+## 결과
+
+이 패키지 컴포넌트 상당수의 원본이 된 사내 서비스 프론트엔드(Next.js 15 App Router)에 실험 브랜치를 따서 실제로 적용했다. 이 앱은 그동안 같은 컴포넌트와 같은 토큰 파이프라인을 자기 레포에 따로 들고 있었다. 패키지에도 있는 프리미티브 23개와 DataTable을 전부 패키지 import로 바꾸고, 토큰 파이프라인 사본을 지웠다. 앱 결합 때문에 처음부터 패키지에 넣지 않은 DateRangePicker와, 패키지에서 공개 export가 아닌 Table 프리미티브는 앱에 남겼다.
+
+### 지운 것
+
+| 항목 | 줄 수 |
+|---|---|
+| Figma export 토큰 JSON (패키지와 바이트 단위로 같았음) | 15,077 |
+| 프리미티브 23개 + DataTable | 5,802 |
+| 교체된 컴포넌트의 테스트 (패키지 쪽에 같은 테스트가 있음) | 2,047 |
+| 생성·유틸리티 CSS 5개 파일과 `globals.css`의 중복 정의 | 1,196 |
+| 토큰 생성기 | 300 |
+
+새로 쓴 코드는 번역 문구를 꽂는 래퍼 6개 파일(137줄)이다. `next.config`와 `vitest.config`는 손대지 않았고, 전역 CSS에서는 토큰·유틸리티·`tw-animate-css` import가 `styles.css` 한 줄로 바뀌었다. 앱 `package.json`의 의존성은 60개에서 47개로 줄었다. 앱이 더 이상 직접 import하지 않는 Radix 패키지 11개, `class-variance-authority`, `@tanstack/react-virtual`, `style-dictionary`가 빠지고 디자인 시스템 하나가 들어왔다.
+
+토큰 쪽은 이 작업의 동기를 그대로 보여 줬다. 두 레포의 토큰 JSON은 바이트 단위로 같았고, 생성된 CSS의 차이는 투명도 변수 7개의 소수점 표기(`0.04`와 `0.03999999910593033`)뿐이었다. Figma에서 토큰을 다시 export할 때마다 같은 작업을 두 레포에서 하고 있었던 것이다. 이제는 패키지 한 곳만 갱신하면 된다.
+
+### 적용하면서 실제로 막힌 것
+
+- **타입 오류는 한 곳뿐이었다.** 앱의 Checkbox는 `label` prop을 받는 네이티브 `input`이었고, 패키지는 Radix 기반에 라벨이 `CheckboxField`에 있다. 페이지 A 한 곳을 `CheckboxField`와 `onCheckedChange`로 바꿨다.
+- **사이드바가 사라졌다.** 4단계 구조에서 앱 Tailwind와 같은 이름의 패키지 클래스가 앱의 반응형 클래스를 이겼다(고려한 해결 방법 4). 이 일이 5단계와 최종 구조의 출발점이 됐다.
+- **번역이 영어로 돌아갔다.** 앱의 프리미티브는 내부에서 next-intl로 닫기 버튼 이름과 빈 표 문구를 가져왔다. 패키지는 영어 기본값을 가진 `*Label` prop으로 받기 때문에, 한국어 화면에서 닫기 버튼 이름이 영어로 바뀌었다. 앱의 접근성 이름 테스트 3개가 이것을 잡았다. Alert, DialogContent, SheetContent, SelectContent, DataTable, Toaster에 번역 문구를 꽂는 래퍼를 두어 해결했다.
+- **토스트는 문구를 넘길 자리가 없었다.** `toast()`는 컴포넌트 밖에서 부르는 함수라 prop으로 받을 수 없고, 패키지 안에서 렌더링하는 Alert의 닫기 버튼 이름은 앱이 바꿀 방법이 없었다. 토스트가 `Toaster` 트리 안에서 렌더링된다는 점을 이용해, `Toaster`가 받은 `closeLabel`을 context로 각 토스트에 내려 주도록 패키지를 고쳤다.
+- **빌드 캐시가 예전 CSS를 실었다.** 최종 구조의 tarball을 같은 버전 번호로 다시 설치하고 빌드했더니, 접두사 시절의 사전 빌드 CSS가 함께 실려 CSS가 gzip 55.7 KB로 나왔다. Next(webpack)의 영구 캐시가 `node_modules` 패키지를 `이름@버전`으로 식별해서, 버전이 같으면 tarball이 바뀌어도 이전 모듈 그래프를 재사용했기 때문이다. 캐시를 지우고 다시 빌드하자 CSS 파일이 하나로 줄었다. 패키지 README의 로컬 설치 안내에 캐시 삭제를 추가했다.
+- **번역 래퍼가 또 하나의 배럴이 됐다.** Alert·Dialog·Sheet·Select·DataTable 래퍼를 한 파일에 모아 두었더니, `SelectContent` 하나만 쓰는 페이지 B도 DataTable과 TanStack Table(50 kB)·Virtual(19 kB)을 함께 받고 있었다(압축 전 크기). 그 페이지의 첫 방문 JS가 32 KiB, 표가 있는 페이지들이 11 KiB 늘어 보였다. 래퍼를 컴포넌트마다 파일로 나누자 대부분 2 KiB 안쪽으로 줄었다.
+
+### CSS 크기: 중복이 사라졌다
+
+같은 머신에서 적용 전, 5단계(접두사 + 사전 빌드), 최종 구조로 각각 프로덕션 빌드를 돌려 빌드된 CSS 파일 전체의 크기를 비교했다.
+
+| 빌드 | CSS (원본) | CSS (gzip) | 적용 전 대비 (gzip) |
+|---|---|---|---|
+| 적용 전 | 162,890 B | 33,781 B | — |
+| 5단계: 접두사 + 사전 빌드 | 255,473 B | 49,373 B | +46% |
+| 최종: 앱 Tailwind가 한 번에 | 190,697 B | 36,049 B | +6.7% |
+
+5단계에서는 같은 스타일이 앱 CSS(`.flex`)와 패키지 CSS(`.yui\:flex`)에 한 번씩 실렸다. 최종 구조에서는 CSS 파일이 하나이고, `.flex` 같은 규칙도 한 번씩만 나온다.
+
+남은 +6.7%(원본 기준 +27.8 KB)는 중복이 아니라 앱이 쓰지 않는 것까지 생성된 몫이다. 두 빌드의 CSS를 규칙 단위로 비교했다.
+
+- **쓰지 않는 컴포넌트의 클래스(약 21 KB).** `@source "../../dist"`는 앱이 import하는지와 상관없이 패키지 컴포넌트 52개를 모두 스캔한다. Tailwind는 JS import 그래프를 따라가지 않기 때문이다. 늘어난 클래스는 chart·combobox·calendar·switch처럼 이 앱이 하나도 import하지 않는 컴포넌트에서 가장 많이 나왔다.
+- **쓰지 않는 토큰(약 4.7 KB).** `theme(static)`이 orange·purple 팔레트처럼 앱도 컴포넌트도 쓰지 않는 토큰까지 내보낸다.
+- **slick 구조 CSS(약 3.5 KB).** 측정 당시에는 Carousel의 CSS가 들어 있었다. 이후 Carousel을 패키지에서 빼면서 이 부분은 없어졌다.
+
+JS는 최종 구조에서 적용 전과 거의 같았다. 페이지마다 첫 방문 때 내려받는 JS를 빌드 매니페스트에서 모아 중복 없이 합산해 보니(gzip), 9개 페이지 중 7개가 ±2 KiB 안이었고 가장 크게 늘어난 페이지도 +6.1 KiB였다.
+
+## 다시 한다면?
+
+소비 앱이 실제로 어떤 앱인지부터 확인했을 것이다. "Tailwind가 없는 앱도 import만 하면 된다"는 목표는 그럴듯했지만, 이 패키지를 쓸 앱은 처음부터 모두 Tailwind 앱이었다. 쓰는 곳이 없는 경우를 위해 사전 빌드, 레이어 배치, 접두사 codemod, 범위 preflight, 마커 테스트를 차례로 만들었고, 그 비용은 실제 소비 앱이 CSS 중복으로 냈다. CSS 중복은 사전 빌드를 고른 순간 정해진 결과였다. 다른 Tailwind 기반 라이브러리가 어떻게 배포하는지도 마지막이 아니라 3단계를 시작하기 전에 찾아봤어야 했다.
+
+이 과정에서 남긴 것도 있다. 2단계 이후의 문제는 전부 레포 안의 검사가 아니라 pack 스모크와 실제 앱 적용에서 드러났다. 기본 템플릿의 전역 리셋, 사라진 사이드바, 두 배가 된 First Load JS, Node에서 깨지는 CJS default import, 빌드 캐시에 남은 예전 CSS가 모두 그랬다. 그래서 지금은 tarball을 실제 Vite·Next 앱에 설치해 빌드하는 스모크가 릴리스 전 마지막 관문이고, 계약 테스트와 dist 검사는 스모크와 실제 앱에서 한 번 겪은 실패를 레포 안에서 다시 잡는 역할을 맡는다.

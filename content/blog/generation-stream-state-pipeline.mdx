@@ -1,0 +1,251 @@
+export const metadata = {
+  title: "생성 결과를 스트림으로 받게 바꾼 뒤 쏟아지는 이벤트를 프레임 단위로 묶은 과정",
+  description: "이미지·영상 생성 결과를 응답 하나로 받던 Playground를 SSE로 바꾸고, 그 뒤 워크플로 실행에서 쏟아지는 노드 이벤트를 프레임당 한 번만 반영하도록 만든 기록.",
+  date: "2026-07-23",
+  tags: ["상태 관리", "실시간", "성능"],
+  work: "yetter",
+  featured: true,
+};
+
+## 문제 상황
+
+이미지·영상 생성 모델을 브라우저에서 바로 실행해 보는 Playground 화면이 있다. 요청을 보내고, 결과를 받아 그린다. 그런데 생성은 수십 초가 걸린다. 그 시간 동안 화면에는 아무 일도 일어나지 않는다. 진행 로그도, 중간 상태도 없다가, 끝나는 순간 로그 전체와 결과가 한꺼번에 나타난다.
+
+백엔드는 진행 중 로그와 상태를 낼 수 있었다. 소비하지 않고 있었던 건 프론트였다.
+
+그래서 이벤트 스트림으로 바꿨다. 그러자 반대쪽 문제가 나타났다. 여러 모델을 이어 붙인 워크플로를 실행하면, 노드마다 상태 이벤트가 따로 도착한다. 이벤트 하나당 store를 갱신하면 한 프레임 안에서 갱신이 여러 번 일어난다. 게다가 이벤트가 도착 순서대로 온다는 보장이 없어서, `COMPLETED`로 끝난 노드가 뒤늦게 도착한 이벤트 때문에 `IN_PROGRESS`로 되돌아가기도 했다.
+
+## 기존 구조
+
+단일 모델 실행은 훅 하나가 전부를 맡고 있었다. 요청을 보내고, 응답 하나를 통째로 받고, 그 안에서 필요한 값을 꺼내 reducer에 넣는다.
+
+```ts
+const response = await fetch("/api/stream", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ apiKey, endpoint, /* ... */ }),
+});
+
+const responseBody = await response.json();
+if (!response.ok) {
+  // ...
+}
+
+dispatch({ type: "SET_REQUEST_ID", requestId: responseBody?.requestId || "" });
+// status / logs / result 를 responseBody 에서 꺼내 순서대로 dispatch
+```
+
+워크플로 실행 쪽은 별도로 zustand store를 쓴다. `runs[runId].nodes[nodeId]` 아래에 노드별 실행 상태(status, output, error, seq)를 두고, 컴포넌트는 selector로 "현재 run 기준 내 노드 상태"만 구독한다.
+
+```ts
+export function useCurrentNodeState(nodeId: string) {
+  return useExecutionStore((s) => {
+    const runId = s.currentRunId;
+    if (!runId) return undefined;
+    return s.runs[runId]?.nodes[nodeId];
+  });
+}
+```
+
+구독 범위는 처음부터 노드 단위로 좁혀 놨다. 문제는 구독 범위가 아니라 갱신 횟수 쪽이었다.
+
+## 문제 원인
+
+두 가지가 겹쳤다.
+
+첫째, `await response.json()`은 스트림을 쓸 수 없다. 이 한 줄이 "응답이 다 와야 화면이 바뀐다"를 강제한다.
+
+둘째, SSE 이벤트의 도착 빈도가 렌더 프레임보다 잦다. 노드 N개가 동시에 진행되면 한 프레임 안에 이벤트가 N개 이상 들어온다. 그대로 store에 쓰면 프레임당 갱신이 그만큼 일어난다.
+
+셋째, 서버가 순서 보장용 `seq`를 항상 주지는 않았다. 그래서 도착 순서만 믿을 수 없는데, 믿지 않을 근거도 이벤트마다 있는 게 아니었다.
+
+## 고려한 해결 방법
+
+두 결정 모두 대안을 늘어놓고 고른 게 아니었다. 제약이 선택지를 거의 다 지웠다.
+
+전송 쪽에서는 응답 형식이 바뀌는 시점에도 화면이 깨지면 안 됐다. 그래서 "무조건 스트림으로 읽는다"를 쓸 수 없었고, 응답을 보고 런타임에 판별하는 형태가 남았다.
+
+상태 쪽에서는 서버가 순서 번호를 항상 주지는 않는다는 점이 컸다. 도착 순서도 순서 번호도 믿을 수 없으니, 순서를 복원하는 방식 대신 "뒤로만 가지 않으면 된다"로 목표를 낮췄다.
+
+## 선택한 방법
+
+두 문제를 각각 다른 층에서 풀었다.
+
+전송 층에서는 응답 형식을 프론트가 골라 쓰게 했다. 요청에 `Accept: text/event-stream`을 붙이되, 응답의 content-type이 실제로 이벤트 스트림일 때만 스트림 경로로 분기하고 기존 JSON 경로를 그대로 남겼다. 서버 전환과 프론트 전환을 같은 날에 맞출 필요가 없어진다.
+
+상태 층에서는 이벤트를 받는 즉시 store에 쓰지 않기로 했다. 큐에 쌓고 `requestAnimationFrame`당 한 번만 비운다. 한 배치 안에 같은 노드 이벤트가 여러 개면 그중 하나만 고른다. 고르는 기준은 `seq`가 있으면 `seq`, 없으면 상태의 진행도다. 이 규칙 덕분에 `seq`를 주는 서버와 주지 않는 서버를 같은 코드로 다룰 수 있다.
+
+## 구현
+
+### 이벤트 단위로 읽기
+
+`content-type`으로 분기하고, `getReader()`로 읽으면서 빈 줄 기준으로 블록을 자른다. 잘리다 만 조각은 buffer에 남겨 다음 청크와 이어 붙인다.
+
+```ts
+const contentType = response.headers.get("content-type") || "";
+if (contentType.includes("text/event-stream")) {
+  const reader = response.body?.getReader();
+  if (!reader) throw new Error("Stream body not available");
+
+  const decoder = new TextDecoder();
+  let buffer = "";
+
+  while (true) {
+    const { value, done } = await reader.read();
+    if (done) break;
+
+    buffer += decoder.decode(value, { stream: true });
+    const parts = buffer.split("\n\n");
+    // 마지막 조각은 아직 안 끝난 블록이므로 buffer 에 되돌린다
+    buffer = parts.pop() || "";
+    parts.forEach(handleEventBlock);
+  }
+
+  if (buffer.trim()) handleEventBlock(buffer);
+  return;
+}
+```
+
+이벤트 타입별 라우팅에서 한 군데 신경 쓴 곳이 있다. 종료 이벤트에도 전체 로그가 실려 오는데, 이미 스트리밍으로 받은 로그가 있으면 그걸 덮어쓰면 안 된다.
+
+```ts {9-12}
+} else if (eventType === "log") {
+  const nextLogs = Array.isArray(data?.logs) ? data.logs.join("\n") : data?.logs || "";
+  if (nextLogs) {
+    receivedLogEvent = true;
+    dispatch({ type: "APPEND_LOGS", chunk: nextLogs });
+  }
+} else if (eventType === "done") {
+  if (data?.status) dispatch({ type: "SET_STATUS", status: data.status });
+  // 스트리밍 로그를 한 번도 못 받았을 때만 done 의 최종 로그를 쓴다
+  if (!receivedLogEvent) {
+    // ...
+  }
+  applyStreamResult(data?.result);
+}
+```
+
+결과 가공(미디어 종류별 분기, 실행 시간 평균)은 `applyStreamResult`로 따로 뺐다. 스트림 경로와 JSON 경로가 같은 함수를 쓴다.
+
+### 프레임당 한 번만 반영하기
+
+큐와 스케줄 핸들은 store 바깥, 모듈 스코프에 뒀다. 이벤트를 넣는 쪽은 큐에 push하고 flush를 예약하기만 한다.
+
+```ts
+const runQueues = new Map<string, StreamEventEnvelope[]>();
+const runFlushHandles = new Map<string, FlushHandle>();
+
+enqueueEvent: (runId, event) => {
+  const q = runQueues.get(runId);
+  if (q) q.push(event);
+  else runQueues.set(runId, [event]);
+
+  scheduleFlush(runId);
+},
+```
+
+`requestAnimationFrame`은 탭이 백그라운드면 돌지 않는다. 실행을 걸어 두고 다른 탭으로 옮기는 건 흔한 사용 방식이라, 그 경우는 `setTimeout`으로 폴백한다.
+
+```ts {4-10}
+function scheduleFlush(runId: string) {
+  if (runFlushHandles.has(runId)) return;
+
+  const useTimeout = !canUseDOM() || document.visibilityState === "hidden";
+
+  if (useTimeout) {
+    const id = setTimeout(() => flushNow(runId), 16) as unknown as number;
+    runFlushHandles.set(runId, { kind: "timeout", id });
+    return;
+  }
+
+  const id = requestAnimationFrame(() => flushNow(runId));
+  runFlushHandles.set(runId, { kind: "raf", id });
+}
+```
+
+flush는 큐를 비우고, 병합하고, store에 한 번 쓴다. 쓰는 동안 또 쌓였으면 다음 프레임을 예약한다.
+
+```ts
+function flushNow(runId: string) {
+  cancelScheduledFlush(runId); // 핸들 먼저 제거해 재스케줄이 가능하게
+
+  const q = runQueues.get(runId);
+  if (!q || q.length === 0) return;
+  runQueues.set(runId, []);
+
+  useExecutionStore.getState()._applyMergedEvent(runId, mergeBatch(q));
+
+  const q2 = runQueues.get(runId);
+  if (q2 && q2.length > 0) scheduleFlush(runId);
+}
+```
+
+### 상태가 뒤로 가지 않게
+
+병합 기준은 `seq` → 상태 진행도 → output 유무 → 도착 시각 순이다. 상태 진행도는 상수 테이블로 뒀다.
+
+```ts
+const STATUS_RANK: Record<NodeStatus, number> = {
+  IDLE: 0,
+  IN_QUEUE: 1,
+  IN_PROGRESS: 1,
+  COMPLETED: 2,
+  FAILED: 2,
+  CANCELLED: 2,
+};
+
+function pickBetterCandidate(a: Candidate | undefined, b: Candidate): Candidate {
+  if (!a) return b;
+
+  const aSeq = a.norm.seq;
+  const bSeq = b.norm.seq;
+  if (typeof aSeq === "number" && typeof bSeq === "number") {
+    if (bSeq !== aSeq) return bSeq > aSeq ? b : a;
+    // seq 가 같으면 결과를 들고 있는 쪽
+    if (b.hasOutput !== a.hasOutput) return b.hasOutput ? b : a;
+    return b.ts >= a.ts ? b : a;
+  }
+
+  const aRank = STATUS_RANK[a.norm.status];
+  const bRank = STATUS_RANK[b.norm.status];
+  if (bRank !== aRank) return bRank > aRank ? b : a;
+  if (b.hasOutput !== a.hasOutput) return b.hasOutput ? b : a;
+  return b.ts >= a.ts ? b : a;
+}
+```
+
+같은 판정을 저장 직전에 한 번 더 한다. 배치 안에서 이긴 이벤트가, 이미 저장된 값보다는 뒤처진 경우가 있기 때문이다.
+
+```ts
+function shouldApplyToStored(prev: NodeRunState | undefined, next: Partial<NodeRunState>) {
+  if (!prev) return true;
+
+  if (typeof next.seq === "number" && typeof prev.seq === "number") {
+    return next.seq >= prev.seq;
+  }
+  if (next.status && STATUS_RANK[next.status] < STATUS_RANK[prev.status]) {
+    return false;
+  }
+  return true;
+}
+```
+
+서버 payload 형태도 한 곳에서 흡수했다. 출력 노드는 status 키 없이 결과만 보내는데, 이걸 호출부마다 처리하는 대신 정규화 함수에서 "status·output·error 키가 하나도 없으면 payload 자체가 output이고 상태는 완료"로 해석한다.
+
+마지막으로 배칭에는 짝이 되는 정리 작업이 필요하다. 실행이 끝나면 큐에 남은 이벤트를 강제로 비워야 하고(`flushCurrentRun`), 워크플로를 옮기면 이전 run 상태를 지워야 한다(`clearAll`). 후자를 빠뜨려서 다른 워크플로를 열었을 때 이전 실행 결과가 남는 버그가 한 번 있었다.
+
+<StreamBatchDemo />
+
+## 결과
+
+요청을 보낸 직후부터 로그가 흐르고 상태가 바뀐다. 수십 초 동안 아무 일도 일어나지 않다가 끝나는 순간 한꺼번에 나타나던 화면이 없어졌다.
+
+생성에 걸리는 시간 자체는 그대로다. 바뀐 건 그 시간 동안 화면이 무엇을 보여 주는가다.
+
+## 다시 한다면?
+
+배칭에는 정리 경로가 딸려온다는 걸 늦게 알았다.
+
+이벤트를 큐에 쌓아 두면 두 가지가 같이 필요해진다. 언제 강제로 비울 것인가, 그리고 언제 통째로 버릴 것인가. 앞의 것은 처음부터 있었다. 실행이 끝나면 남은 큐를 비운다. 뒤의 것을 빠뜨렸다. 워크플로를 옮겨도 이전 실행 상태가 store에 그대로 남아서, 다른 워크플로를 열었는데 전에 돌린 결과가 보이는 버그가 났다. 나중에 워크플로가 바뀔 때 전체를 지우는 것으로 막았다.
+
+다시 짠다면 큐를 만드는 시점에 비우는 경로와 버리는 경로를 같이 설계하겠다. 큐는 상태를 잠깐 들고 있는 장치라서, 들어오는 쪽만 만들면 반드시 어딘가에 남는다.

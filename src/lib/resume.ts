@@ -155,7 +155,7 @@ export const works: Work[] = [
         text: "디자인 토큰, 공통 컴포넌트, Storybook, Sentry 환경을 구축해 UI 일관성과 운영 안정성 향상",
       },
     ],
-    post: "openapi-dynamic-form",
+    post: "json-schema-type-widget-mismatch",
   },
   {
     id: "owlite",
@@ -188,7 +188,7 @@ export const works: Work[] = [
         ],
       },
     ],
-    post: "model-graph-rendering",
+    post: "editor-node-select-full-rerender",
   },
   {
     id: "fitsonchips",
@@ -252,7 +252,6 @@ export const works: Work[] = [
         text: "서브셋 분리와 unicode-range, 로케일별 동적 import로 초기 폰트 다운로드를 **2.06MB에서 53KB로 97% 축소**",
       },
     ],
-    post: "font-subsetting",
   },
 ];
 

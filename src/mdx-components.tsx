@@ -1,5 +1,10 @@
 import type { MDXComponents } from "mdx/types";
 import type { ComponentProps } from "react";
+import { CssDeliveryDemo } from "@/components/demos/css-delivery-demo";
+import { DecodeWindowDemo } from "@/components/demos/decode-window-demo";
+import { MiniEditorDemo } from "@/components/demos/mini-editor-demo";
+import { SchemaFormDemo } from "@/components/demos/schema-form-demo";
+import { StreamBatchDemo } from "@/components/demos/stream-batch-demo";
 import { TextLink } from "@/components/section";
 
 // 블로그 본문(MDX)의 마크다운 요소 스타일
@@ -17,11 +22,11 @@ const components: MDXComponents = {
   hr: () => <hr className="my-12 border-line" />,
   pre: (props) => (
     <pre
-      className="my-6 overflow-x-auto rounded-lg bg-soft px-5 py-4 font-mono text-[13.5px] leading-[1.7] text-heading"
+      className="my-6 overflow-x-auto rounded-lg bg-soft py-4 font-mono text-[13.5px] leading-[1.7] text-heading"
       {...props}
     />
   ),
-  // 블록 코드(pre 안)는 pre 스타일을 따르고, 문장 속 코드만 배경을 둔다
+  // 블록 코드(pre 안)는 pre 스타일을 따르고, 문장 속 코드만 배경을 둔다. 블록 코드의 색과 줄 강조는 globals.css의 [data-line] 규칙
   code: (props) => (
     <code className="rounded bg-soft px-1.5 py-0.5 font-mono text-[0.9em] text-heading [pre_&]:bg-transparent [pre_&]:p-0" {...props} />
   ),
@@ -32,6 +37,13 @@ const components: MDXComponents = {
   ),
   th: (props) => <th className="border-b border-line py-2 pr-4 text-left font-semibold text-heading" {...props} />,
   td: (props) => <td className="border-b border-line py-2 pr-4 tabular-nums" {...props} />,
+
+  // 글에서 import 없이 태그로 바로 쓰는 인터랙티브 데모
+  CssDeliveryDemo,
+  DecodeWindowDemo,
+  MiniEditorDemo,
+  SchemaFormDemo,
+  StreamBatchDemo,
 };
 
 export function useMDXComponents(): MDXComponents {
