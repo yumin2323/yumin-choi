@@ -1,8 +1,10 @@
 import type { MDXComponents } from "mdx/types";
 import type { ComponentProps } from "react";
+import { CellRangeDemo } from "@/components/demos/cell-range-demo";
 import { CssDeliveryDemo } from "@/components/demos/css-delivery-demo";
 import { DecodeWindowDemo } from "@/components/demos/decode-window-demo";
 import { MiniEditorDemo } from "@/components/demos/mini-editor-demo";
+import { ParallelAxesDemo } from "@/components/demos/parallel-axes-demo";
 import { SchemaFormDemo } from "@/components/demos/schema-form-demo";
 import { StreamBatchDemo } from "@/components/demos/stream-batch-demo";
 import { TextLink } from "@/components/section";
@@ -39,9 +41,11 @@ const components: MDXComponents = {
   td: (props) => <td className="border-b border-line py-2 pr-4 tabular-nums" {...props} />,
 
   // 글에서 import 없이 태그로 바로 쓰는 인터랙티브 데모
+  CellRangeDemo,
   CssDeliveryDemo,
   DecodeWindowDemo,
   MiniEditorDemo,
+  ParallelAxesDemo,
   SchemaFormDemo,
   StreamBatchDemo,
 };
