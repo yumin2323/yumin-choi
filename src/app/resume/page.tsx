@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { PrintLink } from "@/components/print-link";
-import { ArrowLink, COLUMNS, Highlights, Num, OutcomeLine, SHELL, Section, TextLink } from "@/components/section";
+import { ArrowLink, COLUMNS, Highlights, Num, OutcomeLine, READING, SHELL, Section, TextLink } from "@/components/section";
 import { careerSummary, education, profile, skills, timeline, works } from "@/lib/resume";
 
 export const metadata: Metadata = {
@@ -63,19 +63,21 @@ export default function ResumePage() {
                   </h3>
                   <p className="text-sm text-muted tabular-nums">{work.period}</p>
                 </div>
-                <p className="mt-1 text-sm text-muted">{work.category}</p>
-                <p className="mt-4 text-[15px] leading-[1.8] text-sub">{work.tagline}</p>
+                <p className="mt-1 text-sm text-muted">
+                  {work.category}
+                  {work.status && ` · ${work.status}`}
+                </p>
                 {work.outcome && (
-                  <div className="mt-2">
+                  <div className={`mt-4 ${READING}`}>
                     <OutcomeLine outcome={work.outcome} />
                   </div>
                 )}
                 {work.impact && (
-                  <p className="mt-2 text-[15px] leading-[1.8] text-sub">
-                    제품 성과<span className="ml-2 font-semibold text-heading">{work.impact}</span>
+                  <p className={`mt-2 text-[15px] leading-[1.8] text-sub ${READING}`}>
+                    제품 성과<span className="ml-2 text-heading">{work.impact}</span>
                   </p>
                 )}
-                <div className="mt-6">
+                <div className={`mt-6 ${READING}`}>
                   <Highlights items={work.highlights} />
                 </div>
                 <p className="mt-6 text-[13px] leading-[1.7] text-muted">{work.stack.join(" · ")}</p>
