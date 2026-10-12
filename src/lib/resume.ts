@@ -230,7 +230,7 @@ export const works: Work[] = [
     highlights: [
       {
         title: "공식 웹사이트 풀스택 단독 구현",
-        text: "전 페이지 프론트엔드와 FastAPI·MongoDB 백엔드를 구현하고, Dockerfile과 Jenkins 설정 파일을 구성해 배포 및 서비스 동작 검증",
+        text: "전 페이지 프론트엔드와 FastAPI·MongoDB 백엔드를 구현하고, Dockerfile·Jenkins 설정 파일 수정 및 배포 후 서비스 동작 검증",
       },
       {
         title: "외부 블로그 콘텐츠 자동 동기화",
