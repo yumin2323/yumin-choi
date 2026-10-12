@@ -122,6 +122,8 @@ SVG 안의 숫자는 **1200 폭 viewBox 기준 단위**입니다. 글 페이지(
 | `json-schema-type-widget-mismatch` | 스키마 패널 (type이 모두 같은 필드 6줄) | 후보 위젯 3개, type만 있는 필드에서 나가는 회색 점선 | 확장 키와 정해진 위젯(선택 상자) | 선택 상자 |
 | `scroll-frames-load-decode-memory` | 프레임 띠 8칸 (디코딩 안 된 칸은 점선) | 메모리 막대 두 개 | 재생 위치 주변 칸의 채워진 막대와 898MB 막대 | 898MB 막대 끝 |
 | `design-system-css-delivery` | 패키지 패널, 앱 패널 | CSS 패널 두 개 (빠진 한 벌은 점선) | 한 번에 컴파일된 CSS 패널과 두 연결선 | 그 CSS 패널 |
+| `aggrid-community-range-selection` | 4열 6행 표 (선과 막대) | 열 이름 막대, 행 번호 점 | 아래로 반복해 채워진 2열 선택 범위와 채우기 핸들 | 선택 범위 |
+| `nivo-parallel-log-reverse-axes` | 평행좌표 축 4개와 선 6개 | 축마다 눈금 점 | log 눈금을 가진 축 하나와 그 눈금을 지나는 선 | 그 선이 마지막 축에 닿는 곳 |
 
 ## 새 썸네일 추가하기
 
