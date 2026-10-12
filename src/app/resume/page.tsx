@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { PrintLink } from "@/components/print-link";
 import { ArrowLink, COLUMNS, Highlights, Num, OutcomeLine, SHELL, Section, TextLink } from "@/components/section";
-import { education, profile, skills, timeline, works } from "@/lib/resume";
+import { careerSummary, education, profile, skills, timeline, works } from "@/lib/resume";
 
 export const metadata: Metadata = {
   title: "Resume",
@@ -31,6 +31,7 @@ export default function ResumePage() {
       </header>
 
       <Section id="experience" title="경력">
+        <p className="mb-8 max-w-[680px] text-[17px] leading-[1.8] text-heading">{careerSummary}</p>
         <ol className="space-y-8 border-l border-line pl-6">
           {timeline.map((item) => (
             <li key={item.company} className="relative">

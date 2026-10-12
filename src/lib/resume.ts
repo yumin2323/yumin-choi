@@ -263,12 +263,16 @@ export const works: Work[] = [
   },
 ];
 
+/** 경력 섹션 첫머리의 한 문장. 혼자 0에서 1까지 완성한 경험을 앞세운다 */
+export const careerSummary =
+  "프론트엔드 1인 담당으로 네 제품을 기술 선정부터 배포와 운영까지 혼자 맡아, 처음부터 정식 서비스로 완성했습니다.";
+
 export const timeline: TimelineItem[] = [
   {
     company: "스퀴즈비츠",
     period: "2022.10 – 현재",
     summary:
-      "프론트엔드 1인 담당으로 Owlite, FitsOnChips, Yetter, 공식 웹사이트를 처음부터 만들었습니다.",
+      "Owlite, FitsOnChips, Yetter, 공식 웹사이트의 프론트엔드를 맡고 있습니다.",
     current: true,
   },
   {
