@@ -2,6 +2,8 @@
 
 프론트엔드 개발자 최유민의 개인 사이트입니다. → **https://yuminchoi.com**
 
+> Personal portfolio and technical blog featuring interactive reproductions of frontend engineering problems.
+
 사이트 전체가 이 레포에 있습니다. Home에서는 저를 소개하고, Resume에서는 전체 경력을 정리하며(PDF로 저장 가능), Blog에는 인터랙티브 데모를 곁들인 문제 해결 기록을 남깁니다.
 
 ## 기술 스택
@@ -48,7 +50,7 @@ export const metadata = {
 
 글 썸네일은 `src/components/post-thumbnail.tsx`에 slug별 인라인 SVG로 들어 있습니다. 추가하거나 바꿀 때는 [docs/blog-thumbnail-guide.md](docs/blog-thumbnail-guide.md)를 따릅니다.
 
-**글 작성에 대해:** 글은 AI의 도움을 받아(AI-assisted) 작성했습니다. 문제와 판단, 코드는 제 업무에서 나온 것이고, AI는 글의 구성과 문장 다듬기, 데모 구현을 도왔습니다. 게시 전에 모든 내용을 직접 검토하고 수정합니다.
+**AI 활용에 대해:** 글의 주제와 문제 상황, 해결 과정은 실제 업무 경험을 바탕으로 정리했습니다. 글 작성과 공개용 인터랙티브 데모 제작에는 AI 도구를 활용했습니다. 데모는 실제 업무 코드를 그대로 사용한 것이 아니라, 글의 내용을 설명하기 위해 공개 가능한 형태로 재구성한 예제입니다.
 
 ## 로컬 실행
 
