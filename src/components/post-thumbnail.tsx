@@ -44,10 +44,26 @@ const flow: SVGProps<SVGPathElement> = {
 };
 
 const thumbnails: Record<string, { label: string; draw: () => ReactNode }> = {
-  "model-graph-rendering": { label: "여러 층의 노드 그래프에서 한 경로가 강조된 그림", draw: ModelGraph },
-  "openapi-dynamic-form": { label: "스키마의 필드가 입력 폼으로 이어지는 그림", draw: SchemaForm },
-  "sse-workflow-state": { label: "흩어진 이벤트가 묶여 바뀐 노드 하나에만 반영되는 그림", draw: EventBatch },
-  "font-subsetting": { label: "세 언어의 글자 중 필요한 글자만 내려받아 용량이 줄어드는 그림", draw: FontSubset },
+  "editor-node-select-full-rerender": {
+    label: "사이드바에서 바꾼 설정이 그래프의 노드 하나에만 반영되는 그림",
+    draw: SelectedNode,
+  },
+  "generation-stream-state-pipeline": {
+    label: "프레임마다 모인 이벤트가 결과 화면의 한 줄에 한 번만 반영되는 그림",
+    draw: FrameBatch,
+  },
+  "json-schema-type-widget-mismatch": {
+    label: "같은 type의 필드 중 확장 키가 있는 필드만 위젯 하나로 이어지는 그림",
+    draw: WidgetByExtension,
+  },
+  "scroll-frames-load-decode-memory": {
+    label: "프레임 띠에서 재생 위치 주변만 디코딩되어 메모리 막대가 줄어드는 그림",
+    draw: DecodeWindow,
+  },
+  "design-system-css-delivery": {
+    label: "패키지와 앱의 코드가 CSS 한 벌로 모이고 중복된 한 벌은 빠지는 그림",
+    draw: SingleStylesheet,
+  },
 };
 
 export function hasThumbnail(slug: string) {
@@ -91,220 +107,280 @@ function Bar({ x, y, w, fill = C.line }: { x: number; y: number; w: number; fill
   return <rect x={x} y={y - BAR / 2} width={w} height={BAR} rx={BAR / 2} fill={fill} />;
 }
 
-/** 모델 그래프: 층마다 노드를 두고 이웃한 층끼리 잇는다. 강조한 경로가 병목을 걷어낸 길 */
-function ModelGraph() {
-  const [nw, nh] = [112, 44];
-  const gap = 140; // 같은 층 노드 사이 세로 간격
-  const counts = [2, 3, 4, 3, 2];
-  const cols = counts.map((_, c) => SAFE.left + nw / 2 + (c * (SAFE.right - SAFE.left - nw)) / (counts.length - 1));
+/** 비활성 칸: 점선 테두리만 있고 안은 배경색 */
+function GhostBox({ x, y, w, h, r = RADIUS.node }: { x: number; y: number; w: number; h: number; r?: number }) {
+  return (
+    <rect x={x} y={y} width={w} height={h} rx={r} fill={C.bg} stroke={C.muted} strokeWidth={STROKE.base} strokeDasharray="10 10" />
+  );
+}
+
+/** 노드 선택: 사이드바에서 바꾼 설정 한 줄이 그래프의 노드 하나에만 반영되고, 나머지 노드와 엣지는 그대로 */
+function SelectedNode() {
+  const [nw, nh] = [120, 52];
+  const panel = { x: 828, w: SAFE.right - 828 };
+  const graphRight = panel.x - 48;
+  const counts = [2, 3, 2];
+  const cols = counts.map((_, c) => SAFE.left + nw / 2 + (c * (graphRight - SAFE.left - nw)) / (counts.length - 1));
+  const gap = (SAFE.bottom - SAFE.top - nh) / 2;
   const rows = counts.map((n) => Array.from({ length: n }, (_, r) => CENTER.y + (r - (n - 1) / 2) * gap));
-  const path = [0, 1, 2, 2, 1]; // 층별로 강조할 노드
+  const selected = { c: 1, r: 1 };
+  const node = { x: cols[selected.c], y: rows[selected.c][selected.r] };
 
   const edges = cols.slice(0, -1).flatMap((x, c) =>
-    rows[c].flatMap((y1, r) =>
-      rows[c + 1]
-        .map((y2, r2) => ({ y2, hot: path[c] === r && path[c + 1] === r2 }))
-        .filter(({ y2 }) => Math.abs(y1 - y2) <= gap)
-        .map(({ y2, hot }) => ({ x1: x + nw / 2, y1, x2: cols[c + 1] - nw / 2, y2, hot })),
-    ),
+    rows[c].flatMap((y1) => rows[c + 1].map((y2) => ({ x1: x + nw / 2, y1, x2: cols[c + 1] - nw / 2, y2 }))),
   );
-  const end = { x: cols.at(-1)!, y: rows.at(-1)![path.at(-1)!] };
 
-  return (
-    <g>
-      {/* 강조 선이 평범한 선 위에 오도록 순서대로 그림 */}
-      {[false, true].map((layer) =>
-        edges
-          .filter(({ hot }) => hot === layer)
-          .map(({ hot, ...e }) => (
-            <line key={`${e.x1}-${e.y1}-${e.y2}`} {...e} stroke={hot ? C.accent : C.line} strokeWidth={hot ? STROKE.strong : STROKE.base} />
-          )),
-      )}
-      {cols.map((x, c) =>
-        rows[c].map((y, r) => <Box key={`${x}-${y}`} x={x - nw / 2} y={y - nh / 2} w={nw} h={nh} hot={path[c] === r} />),
-      )}
-      <GoldDot x={end.x + nw / 2} y={end.y - nh / 2} />
-    </g>
-  );
-}
-
-/** OpenAPI 폼: 왼쪽 스키마의 필드 줄이 오른쪽 입력 폼의 칸으로 이어진다 */
-function SchemaForm() {
-  const pw = 380; // 패널 너비
-  const schemaX = SAFE.left;
-  const formX = SAFE.right - pw;
-  const ph = SAFE.bottom - SAFE.top;
-  const pad = 40;
-
-  // 스키마 필드 줄: 들여쓰기 단계, 키 길이, 값 길이
-  const schema = [
-    [0, 120, 0],
-    [1, 96, 72],
-    [1, 128, 60],
-    [1, 84, 88],
-    [1, 108, 0],
-    [2, 76, 64],
-    [2, 96, 52],
+  // 사이드바 설정 줄: 키 길이, 값 길이. 가운데 줄이 바뀐 설정
+  const settings = [
+    [72, 64],
+    [96, 48],
+    [84, 72],
+    [64, 56],
+    [88, 40],
   ] as const;
-  const rowY = (i: number) => SAFE.top + 56 + i * 62;
-
-  // 폼 칸: 연결되는 스키마 줄과 세로 위치
-  const input = { row: 1, y: 150 };
-  const slider = { row: 2, y: 240 };
-  const select = { row: 3, y: 330 };
-  const group = { row: 5, y: 450 };
-  const links = [input, slider, select, group];
-  const fx = formX + pad;
-  const fw = pw - pad * 2;
+  const changed = 2;
+  const settingY = (i: number) => node.y + (i - changed) * 70;
 
   return (
     <g>
-      <Box x={schemaX} y={SAFE.top} w={pw} h={ph} r={RADIUS.panel} />
-      {schema.map(([indent, key, value], i) => {
-        const x = schemaX + pad + indent * 32;
-        const linked = links.some((link) => link.row === i);
-        return (
-          <g key={i}>
-            <Bar x={x} y={rowY(i)} w={key} fill={linked ? C.accent : C.muted} />
-            {value > 0 && <Bar x={x + key + 16} y={rowY(i)} w={value} />}
-          </g>
-        );
-      })}
-
-      {links.map(({ row, y }) => {
-        const [x1, y1, x2] = [schemaX + pw, rowY(row), formX];
-        const mx = (x1 + x2) / 2;
-        return <path key={row} d={`M ${x1} ${y1} C ${mx} ${y1}, ${mx} ${y}, ${x2} ${y}`} {...flow} />;
-      })}
-
-      <Box x={formX} y={SAFE.top} w={pw} h={ph} r={RADIUS.panel} />
-      {/* 텍스트 입력 */}
-      <Box x={fx} y={input.y - 26} w={fw} h={52} />
-      <Bar x={fx + 20} y={input.y} w={120} />
-      {/* 숫자 입력(슬라이더) */}
-      <Bar x={fx} y={slider.y} w={fw} />
-      <Bar x={fx} y={slider.y} w={180} fill={C.muted} />
-      <circle cx={fx + 180} cy={slider.y} r={14} fill={C.surface} stroke={C.muted} strokeWidth={STROKE.base} />
-      {/* 선택 상자 */}
-      <Box x={fx} y={select.y - 26} w={fw} h={52} />
-      <Bar x={fx + 20} y={select.y} w={96} />
-      <path
-        d={`M ${fx + fw - 34} ${select.y - 5} l 9 9 l 9 -9`}
-        fill="none"
-        stroke={C.muted}
-        strokeWidth={STROKE.base}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      {/* 중첩 객체: 들여쓴 묶음 */}
-      <Box x={fx} y={group.y - 58} w={fw} h={116} />
-      <Bar x={fx + 24} y={group.y - 18} w={fw - 90} />
-      <Bar x={fx + 24} y={group.y + 18} w={fw - 150} />
-
-      <GoldDot x={formX + pw} y={SAFE.top} />
-    </g>
-  );
-}
-
-/** SSE: 위쪽 이벤트가 짧은 구간씩 묶이고, 아래 워크플로우에서 바뀐 노드만 다시 그려진다 */
-function EventBatch() {
-  const ty = 130; // 타임라인 높이
-  const batch = { x1: 520, x2: 720 }; // 한 번에 반영되는 묶음
-  const events = [170, 205, 240, 305, 345, 555, 590, 620, 650, 685, 790, 825, 900, 940];
-  const stale = 1030; // 이전 실행에서 늦게 도착해 버리는 이벤트
-
-  const [cw, ch] = [182, 132];
-  const cy = SAFE.bottom - ch;
-  const cards = Array.from({ length: 4 }, (_, i) => SAFE.left + cw / 2 + (i * (SAFE.right - SAFE.left - cw)) / 3);
-  const updated = 1;
-  const mid = (batch.x1 + batch.x2) / 2;
-
-  return (
-    <g>
-      {/* 이벤트 타임라인 */}
-      <line x1={SAFE.left} y1={ty} x2={SAFE.right} y2={ty} stroke={C.line} strokeWidth={STROKE.base} />
-      <Box x={batch.x1} y={SAFE.top} w={batch.x2 - batch.x1} h={(ty - SAFE.top) * 2} hot />
-      {events.map((x) => {
-        const inBatch = x > batch.x1 && x < batch.x2;
-        return <circle key={x} cx={x} cy={ty} r={inBatch ? DOT.strong : DOT.base} fill={inBatch ? C.accent : C.muted} />;
-      })}
-      <circle cx={stale} cy={ty} r={DOT.strong + 3} fill={C.bg} stroke={C.muted} strokeWidth={STROKE.base} strokeDasharray="4 4" />
-      <path
-        d={`M ${stale - 6} ${ty - 6} l 12 12 M ${stale + 6} ${ty - 6} l -12 12`}
-        stroke={C.muted}
-        strokeWidth={STROKE.base}
-        strokeLinecap="round"
-      />
-
-      {/* 묶음 → 바뀐 노드 */}
-      <path d={`M ${mid} ${2 * ty - SAFE.top} C ${mid} ${cy - 60}, ${cards[updated]} ${ty + 120}, ${cards[updated]} ${cy}`} {...flow} />
-
-      {/* 워크플로우 노드 */}
-      {cards.slice(0, -1).map((x, i) => (
-        <line key={x} x1={x + cw / 2} y1={cy + ch / 2} x2={cards[i + 1] - cw / 2} y2={cy + ch / 2} stroke={C.line} strokeWidth={STROKE.base} />
+      {edges.map((e) => (
+        <line key={`${e.x1}-${e.y1}-${e.y2}`} {...e} stroke={C.line} strokeWidth={STROKE.base} />
       ))}
-      {cards.map((x, i) => {
-        const hot = i === updated;
-        return (
-          <g key={x}>
-            <Box x={x - cw / 2} y={cy} w={cw} h={ch} hot={hot} />
-            <Bar x={x - cw / 2 + 28} y={cy + 48} w={hot ? 100 : 84} fill={hot ? C.accent : C.line} />
-            <Bar x={x - cw / 2 + 28} y={cy + 84} w={hot ? 126 : 112} fill={hot ? C.accent : C.line} />
-          </g>
-        );
-      })}
-      <GoldDot x={cards[updated] + cw / 2} y={cy} />
-    </g>
-  );
-}
+      {cols.map((x, c) =>
+        rows[c].map((y, r) => (
+          <Box key={`${x}-${y}`} x={x - nw / 2} y={y - nh / 2} w={nw} h={nh} hot={c === selected.c && r === selected.r} />
+        )),
+      )}
 
-/** 폰트 서브셋: 세 언어 글자 중 필요한 글자만 받고, 아래 막대가 줄어든 용량을 보여 준다 */
-function FontSubset() {
-  const [tile, th] = [260, 320]; // 칸 너비, 높이
-  const glyphs = [
-    { text: "Aa", hot: false },
-    { text: "가", hot: true },
-    { text: "あ", hot: false },
-  ];
-  const tx = (i: number) => SAFE.left + (i * (SAFE.right - SAFE.left - tile)) / 2;
-  const top = SAFE.top;
-  const before = { y: top + th + 78 };
-  const after = { y: before.y + 54, w: Math.max(BAR, ((SAFE.right - SAFE.left) * 53) / 2060) };
-
-  return (
-    <g>
-      {glyphs.map(({ text, hot }, i) => (
-        <g key={text}>
-          <rect
-            x={tx(i)}
-            y={top}
-            width={tile}
-            height={th}
-            rx={RADIUS.panel}
-            fill={hot ? C.surface : C.bg}
-            stroke={hot ? C.accent : C.line}
-            strokeWidth={hot ? STROKE.strong : STROKE.base}
-            strokeDasharray={hot ? undefined : "10 10"}
-          />
-          <text
-            x={tx(i) + tile / 2}
-            y={top + th / 2}
-            textAnchor="middle"
-            dominantBaseline="central"
-            fontSize={124}
-            fontWeight={600}
-            fill={hot ? C.strong : C.muted}
-            style={{ fontFamily: "var(--font-sans)" }}
-          >
-            {text}
-          </text>
+      <Box x={panel.x} y={SAFE.top} w={panel.w} h={SAFE.bottom - SAFE.top} r={RADIUS.panel} />
+      {settings.map(([key, value], i) => (
+        <g key={i}>
+          <Bar x={panel.x + 32} y={settingY(i)} w={key} fill={i === changed ? C.accent : C.muted} />
+          <Bar x={panel.x + 32 + key + 16} y={settingY(i)} w={value} />
         </g>
       ))}
 
-      {/* 용량 막대: 전(2.06MB)과 후(53KB). 실제 비율 그대로 */}
-      <Bar x={SAFE.left} y={before.y} w={SAFE.right - SAFE.left} />
+      {/* 바뀐 설정 → 선택된 노드 */}
+      <path d={`M ${panel.x + 24} ${node.y} L ${node.x + nw / 2 + 12} ${node.y}`} {...flow} />
+      <GoldDot x={node.x + nw / 2} y={node.y - nh / 2} />
+    </g>
+  );
+}
+
+/** 스트림: 이벤트가 프레임 칸마다 모이고, 한 프레임의 묶음이 결과 화면의 한 줄에 한 번만 반영된다 */
+function FrameBatch() {
+  const gapX = 24;
+  const fw = (SAFE.right - SAFE.left - gapX * 4) / 5;
+  const fh = 120;
+  const fx = (i: number) => SAFE.left + i * (fw + gapX);
+  const events = [3, 5, 4, 2, 4]; // 프레임마다 들어온 이벤트 수
+  const hotFrame = 2;
+  const ey = SAFE.top + fh / 2;
+
+  const panel = { x: 300, y: 300, w: 600, h: SAFE.bottom - 300 };
+  const lines = [220, 300, 260, 180]; // 노드별 상태 줄
+  const hotLine = 1;
+  const lineY = (i: number) => panel.y + 56 + i * 48;
+  const barX = panel.x + 68;
+
+  return (
+    <g>
+      {events.map((n, i) => {
+        const hot = i === hotFrame;
+        return (
+          <g key={i}>
+            <Box x={fx(i)} y={SAFE.top} w={fw} h={fh} hot={hot} />
+            {Array.from({ length: n }, (_, k) => (
+              <circle
+                key={k}
+                cx={fx(i) + ((k + 1) * fw) / (n + 1)}
+                cy={ey}
+                r={hot ? DOT.strong : DOT.base}
+                fill={hot ? C.accent : C.muted}
+              />
+            ))}
+          </g>
+        );
+      })}
+
+      {/* 프레임 묶음 → 결과 화면의 바뀐 줄 */}
+      <path
+        d={`M ${fx(hotFrame) + fw / 2} ${SAFE.top + fh} C ${fx(hotFrame) + fw / 2} ${panel.y}, ${barX - 40} ${panel.y}, ${barX - 40} ${lineY(hotLine)}`}
+        {...flow}
+      />
+
+      <Box x={panel.x} y={panel.y} w={panel.w} h={panel.h} r={RADIUS.panel} />
+      {lines.map((w, i) => {
+        const hot = i === hotLine;
+        return (
+          <g key={i}>
+            <circle cx={panel.x + 40} cy={lineY(i)} r={hot ? DOT.strong : DOT.base} fill={hot ? C.accent : C.muted} />
+            <Bar x={barX} y={lineY(i)} w={w} fill={hot ? C.accent : C.line} />
+          </g>
+        );
+      })}
+      <GoldDot x={barX + lines[hotLine] + 20} y={lineY(hotLine)} />
+    </g>
+  );
+}
+
+/** JSON Schema 위젯: type이 같은 필드는 어느 위젯으로 갈지 정해지지 않고, 확장 키가 있는 필드만 위젯 하나로 이어진다 */
+function WidgetByExtension() {
+  const pw = 380;
+  const pad = 40;
+  const rows = 6;
+  const rowY = (i: number) => SAFE.top + 64 + i * 68;
+  const keyW = [96, 120, 84, 108, 72, 100];
+  const typeW = 72; // 모든 필드가 같은 type
+  const extended = 2; // 확장 키가 있는 필드
+  const extX = SAFE.left + pad + keyW[extended] + 16 + typeW + 16;
+  const extW = 72;
+
+  const ww = 320;
+  const wx = SAFE.right - ww;
+  const wh = 120;
+  const wy = (i: number) => SAFE.top + i * ((SAFE.bottom - SAFE.top - wh) / 2);
+  const chosen = 2; // 선택 상자
+  const ambiguous = 4; // type만 있는 필드 하나가 위젯을 못 고르는 모습
+
+  return (
+    <g>
+      <Box x={SAFE.left} y={SAFE.top} w={pw} h={SAFE.bottom - SAFE.top} r={RADIUS.panel} />
+      {Array.from({ length: rows }, (_, i) => (
+        <g key={i}>
+          <Bar x={SAFE.left + pad} y={rowY(i)} w={keyW[i]} fill={C.muted} />
+          <Bar x={SAFE.left + pad + keyW[i] + 16} y={rowY(i)} w={typeW} />
+          {i === extended && <Bar x={extX} y={rowY(i)} w={extW} fill={C.accent} />}
+        </g>
+      ))}
+
+      {/* type만으로는 후보 위젯이 하나로 정해지지 않음 */}
+      {[0, 1, 2].map((i) => {
+        const [x1, y1, x2, y2] = [SAFE.left + pw, rowY(ambiguous), wx, wy(i) + wh / 2];
+        const mx = (x1 + x2) / 2;
+        return (
+          <path
+            key={i}
+            d={`M ${x1} ${y1} C ${mx} ${y1}, ${mx} ${y2}, ${x2} ${y2}`}
+            fill="none"
+            stroke={C.muted}
+            strokeWidth={STROKE.base}
+            strokeDasharray="10 10"
+          />
+        );
+      })}
+      {/* 확장 키 → 정해진 위젯 */}
+      {(() => {
+        const [x1, y1, x2, y2] = [extX + extW + 16, rowY(extended), wx, wy(chosen) + wh / 2];
+        const mx = (SAFE.left + pw + wx) / 2;
+        return <path d={`M ${x1} ${y1} C ${mx} ${y1}, ${mx} ${y2}, ${x2} ${y2}`} {...flow} />;
+      })()}
+
+      {/* 후보 위젯: 텍스트 입력, 슬라이더, 선택 상자 */}
+      <GhostBox x={wx} y={wy(0)} w={ww} h={wh} />
+      <Bar x={wx + 32} y={wy(0) + wh / 2} w={140} fill={C.muted} />
+      <GhostBox x={wx} y={wy(1)} w={ww} h={wh} />
+      <Bar x={wx + 32} y={wy(1) + wh / 2} w={ww - 64} fill={C.muted} />
+      <circle cx={wx + 150} cy={wy(1) + wh / 2} r={14} fill={C.bg} stroke={C.muted} strokeWidth={STROKE.base} />
+      <Box x={wx} y={wy(chosen)} w={ww} h={wh} hot />
+      <Bar x={wx + 32} y={wy(chosen) + wh / 2} w={120} fill={C.accent} />
+      <path
+        d={`M ${wx + ww - 50} ${wy(chosen) + wh / 2 - 5} l 9 9 l 9 -9`}
+        fill="none"
+        stroke={C.accent}
+        strokeWidth={STROKE.strong}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <GoldDot x={wx + ww} y={wy(chosen)} />
+    </g>
+  );
+}
+
+/** 디코드 윈도우: 프레임 띠에서 재생 위치 주변 칸만 디코딩되어(채워진 막대) 있고, 아래 막대가 줄어든 메모리를 보여 준다 */
+function DecodeWindow() {
+  const count = 8;
+  const gapX = 20;
+  const fw = (SAFE.right - SAFE.left - gapX * (count - 1)) / count;
+  const fh = 300;
+  const fx = (i: number) => SAFE.left + i * (fw + gapX);
+  const decoded = [3, 4, 5]; // 재생 위치 주변
+
+  // 메모리 막대: 스크롤 후 1692MB → 898MB. 실제 비율 그대로
+  const full = SAFE.right - SAFE.left;
+  const before = { y: SAFE.top + fh + 98 };
+  const after = { y: before.y + 54, w: (full * 898) / 1692 };
+
+  return (
+    <g>
+      {Array.from({ length: count }, (_, i) =>
+        decoded.includes(i) ? (
+          <g key={i}>
+            <Box x={fx(i)} y={SAFE.top} w={fw} h={fh} />
+            {[0, 1].map((k) => (
+              <Bar key={k} x={fx(i) + 20} y={SAFE.top + fh - 40 - k * 36} w={fw - 40} fill={C.accent} />
+            ))}
+          </g>
+        ) : (
+          <GhostBox key={i} x={fx(i)} y={SAFE.top} w={fw} h={fh} />
+        ),
+      )}
+
+      <Bar x={SAFE.left} y={before.y} w={full} />
       <Bar x={SAFE.left} y={after.y} w={after.w} fill={C.accent} />
       <GoldDot x={SAFE.left + after.w + 20} y={after.y} />
+    </g>
+  );
+}
+
+/** 디자인 시스템 CSS: 패키지 컴포넌트와 앱 코드가 앱의 Tailwind 한 번으로 CSS 한 벌이 되고, 두 번째 벌은 빠진다 */
+function SingleStylesheet() {
+  const lw = 320;
+  const ph = 218;
+  const pkg = { x: SAFE.left, y: SAFE.top };
+  const app = { x: SAFE.left, y: SAFE.bottom - ph };
+  const comp = 72; // 컴포넌트 블록 한 변
+  const compX = (i: number) => pkg.x + 32 + i * (comp + (lw - 64 - comp * 3) / 2);
+
+  const rw = 320;
+  const css = { x: SAFE.right - rw, y: SAFE.top, h: 298 };
+  const dup = { x: css.x, y: css.y + css.h + 32, h: SAFE.bottom - (css.y + css.h + 32) };
+  const cssLines = [200, 152, 232, 120, 176];
+
+  const inY = [css.y + 110, css.y + 190]; // 화살이 들어오는 높이
+
+  return (
+    <g>
+      {/* 패키지: 컴포넌트 블록 */}
+      <Box x={pkg.x} y={pkg.y} w={lw} h={ph} r={RADIUS.panel} />
+      {[0, 1, 2].map((i) => (
+        <Box key={i} x={compX(i)} y={pkg.y + (ph - comp) / 2} w={comp} h={comp} />
+      ))}
+
+      {/* 앱: 코드 줄 */}
+      <Box x={app.x} y={app.y} w={lw} h={ph} r={RADIUS.panel} />
+      {[180, 120, 220].map((w, i) => (
+        <Bar key={i} x={app.x + 32} y={app.y + 64 + i * 45} w={w} fill={i === 0 ? C.muted : C.line} />
+      ))}
+
+      {[pkg, app].map(({ y }, i) => {
+        const [x1, y1, x2, y2] = [SAFE.left + lw, y + ph / 2, css.x, inY[i]];
+        const mx = (x1 + x2) / 2;
+        return <path key={i} d={`M ${x1} ${y1} C ${mx} ${y1}, ${mx} ${y2}, ${x2} ${y2}`} {...flow} />;
+      })}
+
+      {/* 한 번에 컴파일된 CSS 한 벌 */}
+      <Box x={css.x} y={css.y} w={rw} h={css.h} hot r={RADIUS.panel} />
+      {cssLines.map((w, i) => (
+        <Bar key={i} x={css.x + 32} y={css.y + 62 + i * 44} w={w} fill={i === 0 ? C.accent : C.line} />
+      ))}
+      <GoldDot x={css.x + rw} y={css.y} />
+
+      {/* 빠진 두 번째 벌 */}
+      <GhostBox x={dup.x} y={dup.y} w={rw} h={dup.h} r={RADIUS.panel} />
+      {[200, 140].map((w, i) => (
+        <Bar key={i} x={dup.x + 32} y={dup.y + 48 + i * 44} w={w} fill={C.muted} />
+      ))}
     </g>
   );
 }

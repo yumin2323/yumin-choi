@@ -1,0 +1,325 @@
+export const metadata = {
+  title: "JSON Schema의 type만으로는 입력 위젯을 고를 수 없던 문제",
+  description: "AI 모델마다 입력 구조가 달라 모델을 추가할 때마다 폼을 손으로 짰다. 이미 있던 OpenAPI Schema로 폼을 생성하려 했지만 표준 type만으로는 위젯이 결정되지 않아, 벤더 확장을 위젯 결정의 1차 키로 두었다.",
+  date: "2026-05-27",
+  tags: ["아키텍처", "폼", "JSON Schema"],
+  work: "yetter",
+  featured: true,
+};
+
+이미지·영상 생성 모델을 브라우저에서 바로 실행해 보는 Playground 화면이 있다.
+모델을 고르면 그 모델의 입력 폼이 뜨고, 값을 채워 실행하면 결과가 나온다.
+모델이 하나 늘 때마다 이 입력 폼을 직접 만들어야 했고, 그 작업을 없애는 것이 목표였다.
+
+## 문제 상황
+
+모델마다 입력 구조가 달랐다.
+어떤 모델은 프롬프트와 seed만 받고, 어떤 모델은 이미지 배열과 LoRA 설정과 해상도 프리셋을 받았다.
+새 모델이 들어올 때마다 비슷한 모델의 폼을 복사해 고쳤다.
+
+그 복붙이 쌓인 결과가 입력 컴포넌트 한 파일이었다.
+
+```text
+components/input/InputItem.tsx   1,714 lines
+```
+
+이 파일 안에 위젯 구현 11개와 그 위젯을 고르는 분기가 전부 들어 있었다.
+프롬프트 향상 요청을 보내는 스트리밍 fetch 루프까지 같은 파일에 있었다.
+
+모델의 입력 스펙 자체는 이미 존재했다.
+모델 응답에 OpenAPI Schema가 들어 있었고, 입력 필드와 타입과 기본값이 거기 다 적혀 있었다.
+프론트엔드는 그걸 참조만 하고 UI 생성에는 쓰지 않았다.
+
+## 기존 구조
+
+모델 응답에서 프론트가 읽던 것은 사실상 값뿐이었다.
+
+```ts
+// 스키마는 여기 있는데
+model.open_api.components.schemas.Input.properties
+// UI는 모델별로 따로 작성
+```
+
+입력 위젯들은 한 파일 안에 모듈 레벨 상수로 나란히 정의돼 있었다.
+
+```tsx
+// InputItem.tsx (1,714줄) — 한 파일 안의 배치
+const AnyOfSelectInput   = memo(function AnyOfSelectInput({ ... })   // L151
+const EnumSelectInput    = memo(function EnumSelectInput({ ... })    // L385
+const MultiSelectInput   = memo(function MultiSelectInput({ ... })   // L432
+const StringInput        = memo(function StringInput({ ... })        // L491
+const BooleanInput       = memo(function BooleanInput({ ... })       // L746
+const NumberSliderInput  = memo(function NumberSliderInput({ ... })  // L852
+const ObjectArrayInput   = memo(function ObjectArrayInput({ ... })   // L902
+const ObjectInput        = memo(function ObjectInput({ ... })        // L992
+const AudioInput         = memo(function AudioInput({ ... })         // L1068
+const MediaArrayInput    = memo(function MediaArrayInput({ ... })    // L1239
+const ChatMessagesInput  = memo(function ChatMessagesInput({ ... })  // L1490
+
+export const InputItem   = memo(function InputItem({ ... })          // L1529
+```
+
+## 문제 원인
+
+스키마를 읽어 폼을 만들려고 하면 바로 막히는 지점이 있다.
+표준 JSON Schema의 `type`만으로는 어떤 위젯을 그릴지 결정할 수 없다.
+
+`type: "string"` 하나가 이렇게 갈린다.
+
+- 프롬프트 — 여러 줄 textarea, 프롬프트 향상 버튼
+- seed — 한 줄 입력 + 난수 생성 버튼
+- 드롭다운 — 정해진 값 중 선택
+- 이미지 URL — 업로드 박스, 미리보기, 삭제 버튼
+
+`type: "array"`도 마찬가지다.
+
+- 이미지 배열 — 썸네일 그리드
+- LoRA 배열 — 객체 행을 추가·삭제하는 반복 필드
+- 멀티셀렉트 — 체크박스 목록
+
+표준 JSON Schema는 데이터의 제약을 기술하는 명세지 UI를 기술하는 명세가 아니다.
+`type`은 "이 값이 무엇인가"를 말할 뿐 "이 값을 어떻게 입력받을 것인가"는 말하지 않는다.
+필드명 규칙으로 추론하는 방법도 있지만, 그러면 백엔드가 필드 이름을 바꾸는 순간 UI가 깨진다.
+
+## 고려한 해결 방법
+
+솔직히 말하면 여러 안을 놓고 비교하지는 않았다.
+스키마에 이미 있는 정보를 쓰는 것 외의 선택지를 진지하게 검토한 기억이 없다.
+
+다만 "위젯 정보를 어디에 둘 것인가"는 갈림길이었다.
+프론트엔드에 모델 이름별 매핑 테이블을 두는 방법도 있었지만,
+그러면 모델이 늘 때마다 프론트엔드를 고쳐야 한다는 원래 문제가 그대로 남는다.
+`type`과 필드명으로 위젯을 추론하는 방법은 위에 적은 이유로 후보가 되지 못했다.
+
+## 선택한 방법
+
+OpenAPI의 벤더 확장(`x-` 접두어 커스텀 필드)을 쓰기로 했다.
+스키마에 `x-ui-type`을 두고, 그것을 위젯 결정의 1차 키로 삼았다.
+표준 `type`은 `x-ui-type`이 없을 때의 폴백으로만 썼다.
+
+이 확장의 값 집합이 곧 프론트엔드의 UI 어휘가 된다.
+
+```ts
+export enum InputUiTypes {
+  PROMPT = "prompt",
+  SLIDER = "slider",
+  SEED = "seed",
+  DROPDOWN = "dropdown",
+  IMAGE_SIZE = "image_size",
+  AUDIO_URL = "audio_url",
+  IMAGE_URL = "image_url",
+  VIDEO_URL = "video_url",
+  IMAGE_URL_ARRAY = "image_url_array",
+  VIDEO_URL_ARRAY = "video_url_array",
+  OBJECT_ARRAY = "object_array",
+  LORA_ARRAY = "lora_array",
+  CHAT_MESSAGES = "chat_messages",
+  MULTI_SELECT = "multi-select",
+  // ...
+}
+```
+
+이렇게 두면 위젯 선택 권한이 스키마를 쓰는 쪽으로 넘어간다.
+백엔드가 새 모델 스키마에 `x-ui-type`을 채워 올리면, 프론트엔드는 코드를 고치지 않아도 그 모델의 폼이 그려진다.
+프론트엔드가 새로 할 일이 생기는 건 **어휘에 없는 입력 타입이 등장할 때뿐**이다.
+
+## 구현
+
+스키마에서 화면까지를 네 단계로 나눴다.
+
+### 1. 스키마 정규화
+
+가장 먼저 스키마를 위젯이 다루기 쉬운 형태로 편다.
+핵심은 두 가지다. 필드 순서를 스키마가 결정하게 하는 것, 그리고 `required`를 각 property 안으로 접어 넣는 것.
+
+```ts {1,9,21}
+const orderArray = inputObject["x-ui-order-properties"];
+const inputProps = inputObject.properties;
+const requiredArray = Array.isArray(inputObject?.required)
+  ? inputObject.required
+  : [];
+
+const props: PropertiesMap = {};
+
+orderArray.forEach((order) => {
+  let item = inputProps[order] as PropertySchema;
+
+  // array items의 required도 items 내부로 정규화
+  if (item.type === "array" && item?.items?.properties) {
+    const arrayProperties = item.items.properties;
+    const arrayRequired = item.items.required;
+    const arrayItems: Record<string, PropertySchema> = {};
+    // ...
+    item = { ...item, items: arrayItems };
+  }
+
+  props[order] = { ...item, required: requiredArray.includes(order) };
+});
+```
+
+OpenAPI에서 `required`는 상위 객체에 배열로 들어온다.
+그대로 두면 모든 위젯이 "내가 필수인가"를 알기 위해 상위 스키마를 참조해야 한다.
+정규화 단계에서 각 property로 접어 넣으면, 위젯은 자기에게 넘어온 property 하나만 보면 된다.
+
+### 2. 기본값 생성
+
+폼의 초기값도 스키마에서 만든다.
+`default`, `example`, 타입별 안전값 순으로 폴백한다.
+
+```ts
+let defaultVal =
+  prop?.default === undefined
+    ? skipExample
+      ? null
+      : (prop?.example ?? null)
+    : prop?.default;
+
+// ...
+
+if (defaultVal === null && !prop?.nullable) {
+  if (dataType === "string") defaultVal = "";
+  else if (dataType === "number" || dataType === "integer")
+    defaultVal = prop?.minimum ?? 0;
+  else if (dataType === "boolean") defaultVal = false;
+  else if (dataType === "array") defaultVal = [];
+}
+```
+
+`nullable`이면 null을 유지하는 것이 중요했다.
+null과 빈 문자열은 백엔드에서 다른 의미이기 때문이다.
+
+`skipExample` 옵션 하나로 "예시가 채워진 Playground"와 "빈 폼"을 같은 함수로 만든다.
+
+### 3. 위젯 분기
+
+정규화된 property를 받아 위젯을 고르는 부분이다.
+`x-ui-type`을 먼저 보고, `enum` 유무를 보고, 마지막에 표준 `type`을 본다.
+
+```tsx {2,17,22}
+const type = property?.type;
+const uiType = property?.["x-ui-type"] as InputUiTypes | undefined;
+
+if (uiType === InputUiTypes.CHAT_MESSAGES) {
+  return <ChatMessagesInput name={name} label={label} property={property} />;
+}
+
+if (
+  uiType === InputUiTypes.IMAGE_URL ||
+  uiType === InputUiTypes.VIDEO_URL ||
+  uiType === InputUiTypes.IMAGE_URL_ARRAY ||
+  uiType === InputUiTypes.VIDEO_URL_ARRAY
+) {
+  return <MediaArrayInput name={name} property={property} uiType={uiType} />;
+}
+
+if (uiType === InputUiTypes.DROPDOWN || property?.enum?.length > 0) {
+  return <EnumSelectInput name={name} label={label} property={property} />;
+}
+
+// 여기부터 표준 type 폴백
+if (type === "string" || uiType === InputUiTypes.SEED) {
+  return <StringInput name={name} label={label} property={property} />;
+}
+
+// ...
+
+return null;
+```
+
+이 분기 자체는 파일을 나누기 전에도 같은 모양이었다.
+달라진 것은 이 파일이 **분기만 남겼다**는 점이다.
+위젯 11개를 각각 `inputs/` 아래 파일로 빼고, 라벨과 에러 표시만 `common/`으로 공유했다.
+
+```text
+input/
+  InputItem.tsx        202 lines   ← 분기만
+  InputRow.tsx                     ← 렌더 경계
+  common/
+    FieldLabel.tsx
+    FieldError.tsx
+  inputs/
+    AnyOfSelectInput.tsx
+    AudioInput.tsx
+    BooleanInput.tsx
+    ChatMessagesInput.tsx
+    EnumSelectInput.tsx
+    MediaArrayInput.tsx
+    MultiSelectInput.tsx
+    NumberSliderInput.tsx
+    ObjectArrayInput.tsx
+    ObjectInput.tsx
+    StringInput.tsx
+```
+
+새 입력 타입을 추가하는 비용이 여기서 정해진다.
+enum에 한 줄, `inputs/`에 파일 하나, 분기에 한 줄이다.
+
+### 4. 렌더 경계
+
+폼 전체가 아니라 필드 단위로 다시 그리게 하는 부분이다.
+
+```tsx
+export const InputRow = memo(function InputRow({
+  methods, model, name, property, resetKey, onOpenGuestRestriction,
+}) {
+  const value = useWatch({ control: methods.control, name });
+
+  if (value === undefined) {
+    return <div style={{ height: 60, width: "100%" }} />;
+  }
+
+  return (
+    <InputItem
+      key={`${name}-${resetKey}`}
+      model={model}
+      name={name}
+      label={name}
+      property={property}
+      onOpenGuestRestriction={onOpenGuestRestriction}
+    />
+  );
+});
+```
+
+`useWatch`로 해당 필드만 구독한다.
+값이 아직 `undefined`인 동안에는 고정 높이의 자리를 그려 레이아웃이 튀지 않게 했다.
+`resetKey`를 key에 섞은 것은 폼 리셋 시 위젯 내부 상태까지 확실히 초기화하기 위해서다.
+
+아래는 위 네 단계를 그대로 축소해 만든 데모다.
+왼쪽 스키마를 고치면 오른쪽 폼이 다시 그려진다.
+
+<SchemaFormDemo />
+
+## 결과
+
+모델 추가 비용이 "모델 수"가 아니라 "입력 타입 종류 수"에 비례하도록 바뀌었다.
+
+이전에는 비슷한 모델의 폼을 복사해 고치는 데 모델당 2~3시간이 들었고, 그 복붙이 쌓여 입력 컴포넌트가 1,714줄이 됐다.
+
+이후 UI 어휘와 위젯이 얼마나 안정적이었는지는 커밋 기록으로 확인된다.
+
+- `InputUiTypes` enum은 정리 커밋 이후 변경이 없다
+- 위젯 파일은 파일 분해 이후 5개월간 하나도 추가되지 않았다
+
+그 사이 들어온 모델들은 스키마만으로 폼이 그려졌다는 뜻이다.
+
+다만 비용이 사라진 것은 아니고 옮겨갔다.
+
+- 백엔드가 스키마에 `x-ui-type`을 정확히 채워야 한다. 잘못 채우면 폼이 틀리게 그려진다
+- 어휘에 없는 입력 타입이 오면 여전히 enum 한 줄과 위젯 파일 하나가 필요하다
+- 모든 모델이 같은 파이프라인을 타므로, 직렬화 버그 하나가 전 모델에 동시에 나타난다
+
+## 다시 한다면?
+
+스키마 해석과 렌더 표현을 처음부터 분리했을 것이다.
+
+지금 구조에서는 위젯 하나가 두 가지 일을 같이 한다.
+"이 property는 어떤 입력인가"를 판정하는 일과, "그것을 어떻게 그릴 것인가"를 정하는 일이다.
+앞의 것은 어디서 쓰든 같지만, 뒤의 것은 쓰는 곳마다 다르다.
+
+그래서 나중에 같은 스키마를 다른 화면에서 그려야 했을 때,
+판정 로직까지 통째로 한 벌 더 만들게 됐다.
+라벨을 누가 그리는지, 입력 높이가 얼마인지, 값이 바뀔 때 무엇을 알려야 하는지 —
+이런 호스트 사정이 위젯 안에 들어 있었기 때문이다.
+
+판정은 한 벌만 두고 표현만 화면별로 갈랐다면 그 중복은 생기지 않았다.

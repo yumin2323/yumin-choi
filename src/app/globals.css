@@ -37,6 +37,21 @@
   --avatar-neck: #e6c0a7;
   --avatar-blush: #e8a296;
   --avatar-mouth: #a8645b;
+
+  /* 블로그 코드 블록 문법 강조 (rehype-pretty-code, next.config.ts). navy·gray 바탕에 문자열은 green, 숫자는 gold */
+  --shiki-foreground: #172033;
+  --shiki-background: transparent;
+  --shiki-token-keyword: #355979;
+  --shiki-token-function: #285e7c;
+  --shiki-token-string: #2e6a4d;
+  --shiki-token-string-expression: #2e6a4d;
+  --shiki-token-constant: #7a5a28;
+  --shiki-token-parameter: #344054;
+  --shiki-token-comment: #555f6b;
+  --shiki-token-punctuation: #566070;
+  --shiki-token-link: #355979;
+  /* ```ts {3-5}로 고른 줄의 배경. 코드 블록 배경(--soft)과 구분되도록 accent-soft보다 한 단계 진하게 */
+  --code-highlight: #d6e3ef;
 }
 
 :root[data-theme="dark"] {
@@ -72,6 +87,19 @@
   --avatar-neck: #d6ad93;
   --avatar-blush: #d98f84;
   --avatar-mouth: #95564e;
+
+  --shiki-foreground: #e6ecf2;
+  --shiki-background: transparent;
+  --shiki-token-keyword: #8fb3d3;
+  --shiki-token-function: #9fcbe2;
+  --shiki-token-string: #82c7a5;
+  --shiki-token-string-expression: #82c7a5;
+  --shiki-token-constant: #d6b47a;
+  --shiki-token-parameter: #d3dbe3;
+  --shiki-token-comment: #a5b1be;
+  --shiki-token-punctuation: #a8b4c1;
+  --shiki-token-link: #8fb3d3;
+  --code-highlight: #263f56;
 }
 
 @theme inline {
@@ -131,5 +159,24 @@
     html {
       scroll-behavior: auto;
     }
+  }
+}
+
+/* 블로그 코드 블록 (rehype-pretty-code). 줄마다 [data-line] span이 생기고, ```ts {3-5}로 고른 줄에는 data-highlighted-line이 붙는다 */
+@layer components {
+  pre > code[data-line-numbers],
+  pre > code[data-theme] {
+    display: grid;
+    min-width: max-content;
+  }
+
+  pre [data-line] {
+    padding-inline: 1.25rem;
+    border-left: 2px solid transparent;
+  }
+
+  pre [data-highlighted-line] {
+    background: var(--code-highlight);
+    border-left-color: var(--accent);
   }
 }

@@ -1,0 +1,211 @@
+export const metadata = {
+  title: "프레임 230장을 전부 디코딩해 두던 스크롤 페이지가 끊기던 문제",
+  description: "스크롤에 맞춰 영상 프레임을 그리는 페이지가 데스크톱에서 끊기고 메모리를 크게 썼다. 프레임은 압축 상태로 보관하고 재생 위치 주변만 미리 디코딩하도록 바꿨고, AVIF와 대기 중 렌더 루프 정지를 함께 적용했다.",
+  date: "2026-10-01",
+  tags: ["성능", "이미지", "메모리"],
+};
+
+## 문제 상황
+
+스크롤 위치에 맞춰 영상 프레임 230장을 캔버스에 그리는 랜딩 페이지를 만들었다. 데스크톱(1440×900 @2x)에서 측정해 보니 세 가지 문제가 있었다.
+
+- 스크롤하는 동안 프레임이 끊겼다. 3,000여 프레임 중 289프레임이 끊겼다.
+- 스크롤을 끝까지 내린 뒤 브라우저 메모리가 1692MB였고, 피크는 1746MB였다.
+- 프레임 전송량이 24.7MB였다.
+
+스크롤을 멈춰도 렌더 루프(`requestAnimationFrame`)는 매 프레임 계속 돌았다. 대기 중에도 메인 스레드를 초당 31.6ms씩 썼다.
+
+수치는 각 시나리오를 3회 측정한 중앙값이다. 측정할 때마다 브라우저를 새로 띄우고 빈 캐시에서 시작했다. 헤드리스 셸은 캔버스를 CPU로 그리기 때문에, 실제 GPU를 쓰는 Chrome으로 측정했다.
+
+## 기존 구조
+
+이 단계에서 로딩은 이미 한 번 손본 상태였다. 프레임마다 sm 960px, lg 1920px 두 등급을 만들고, 히어로와 분해도처럼 사용자가 멈춰 보는 구간만 xl 2880px를 추가로 만들었다. 등급은 화면이 실제로 필요한 폭을 계산해서 고르고, 휴대폰은 픽셀 밀도와 관계없이 sm을 쓴다.
+
+받는 순서는 coarse-to-fine이다. 16장마다 1장, 그다음 8장, 4장, 2장 간격으로 받고 마지막에 나머지를 채운다. 아직 오지 않은 프레임 자리에는 가장 가까운 로드된 프레임을 그리고, 1/8이 도착하면 페이지를 연다.
+
+문제는 받은 프레임을 다루는 방식이었다. 프레임을 `img`로 받아 `decode()`까지 마친 뒤, 230장을 모두 배열에 들고 있었다.
+
+```js
+function fetchImage(url) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.decoding = "async";
+    img.onload = () => img.decode().then(() => resolve(img), () => resolve(img));
+    img.onerror = () => resolve(null);
+    img.src = url;
+  });
+}
+
+async function loadFrame(i) {
+  const img = await fetchImage(src(size, i));
+  if (img && !frames[i]) {
+    frames[i] = img;
+    // ...
+  }
+}
+
+// Coarse to fine: every 16th frame, then 8th, 4th, 2nd, then the rest
+for (const step of [16, 8, 4, 2, 1]) {
+  for (let i = 0; i < count; i += step) if (!queued.has(i)) { queued.add(i); order.push(i); }
+  // ...
+}
+```
+
+## 문제 원인
+
+Chrome은 `img`의 디코딩 결과를 GPU 프로세스의 캐시에서 관리한다. 캐시 예산을 넘으면 디코딩 결과를 버리고, 그 이미지를 다시 그릴 때 그리는 시점에 재디코딩한다. 1920px, 2880px 프레임을 230장 들고 있으니 예산을 넘었고, 스크롤 중에 그리는 프레임마다 재디코딩이 일어나 끊김이 생겼다.
+
+lg 프레임 전체를 디코딩해 두면 약 1.9GB가 된다(코드 주석의 추정치). 휴대폰의 sm 프레임(960px)은 작아서 이전에도 끊김이 없었다.
+
+렌더 루프는 스크롤이 멈춘 뒤에도 돌았고, 매 프레임 `getBoundingClientRect()`로 레이아웃을 읽고 style을 썼다.
+
+## 고려한 해결 방법
+
+디코딩 범위를 재생 위치 주변으로 줄이기로 한 뒤, 남은 판단은 두 가지였다. 디코딩해 둘 메모리 예산을 얼마로 잡을지, 그리고 AVIF 품질값을 얼마로 할지다.
+
+- **메모리 예산**: 데스크톱에서 300, 150, 80, 40MB로 바꿔 가며 메모리, 끊긴 프레임, 밀린 프레임을 측정했다. 밀린 프레임은 요청한 프레임 대신 이웃 프레임이 그려진 순간을 말한다. 각 예산을 2회씩 측정했다(아래 표). 40MB에서는 샘플의 21%가 밀린 프레임이었다. 80MB도 대체로 괜찮았지만, xl 프레임은 한 장이 19MB라서 4장밖에 담지 못한다. 휴대폰은 Android 에뮬레이션에서 120MB와 60MB 모두 끊긴 프레임과 밀린 프레임이 0이었다.
+- **AVIF 품질값**: 등급별로 히어로, 버스트, 정착 구간에서 프레임 12장을 골라 원본과 비교했다. SSIM과 PSNR(RGB)이 둘 다 기존 WebP 이상인 값 중 가장 작은 값을 기준으로 삼았다.
+
+| 예산 (데스크톱) | 스크롤 후 메모리 | 끊긴 프레임 | 밀린 프레임 |
+|---|---|---|---|
+| 300MB | 1044–1080MB | 0 | 0 |
+| 150MB | 874–939MB | 0–1 | 0 |
+| 80MB | 837–876MB | 0 | 0–10 |
+| 40MB | (RSS 기준 측정) | 0 | 569 (21%) |
+
+| 등급 | WebP | AVIF | 용량 (WebP → AVIF) |
+|---|---|---|---|
+| sm 960px | q82 | q68 | 6.7 → 5.9MB (−12%) |
+| lg 1920px | q80 | q62 | 16.3 → 12.3MB (−25%) |
+| xl 2880px | q78 | q58 | 8.3 → 6.2MB (−25%) |
+
+## 선택한 방법
+
+세 가지를 바꿨다.
+
+1. **AVIF 프레임**: 10-bit 4:2:0 AVIF를 만들고, 디코딩이 되는 브라우저에는 AVIF를, 나머지에는 기존 WebP를 준다. 품질값은 sm q68, lg q62, xl q58이다(WebP는 각각 q82, q80, q78).
+2. **디코드 윈도우**: 프레임은 압축 상태(Blob)로 보관하고, 재생 위치 주변 프레임만 `createImageBitmap`으로 미리 디코딩한다. 예산은 데스크톱 150MB, 휴대폰 60MB다. 데스크톱에서 80MB 대신 150MB를 고른 것은 xl 프레임을 여유 있게 담기 위해서다. 휴대폰은 두 값 모두 끊김이 없어서 메모리가 적은 60MB를 골랐다.
+3. **대기 중 렌더 루프 정지**: 스크롤이 멈추면 rAF 루프를 멈추고, 레이아웃 측정은 resize나 레이아웃이 바뀔 때만 한다.
+
+디코딩이 그리기 전에 백그라운드 스레드에서 끝나 있으니, 그리는 시점에는 준비된 비트맵을 쓰기만 하면 된다.
+
+## 구현
+
+### AVIF 지원 확인
+
+프레임과 같은 프로필(10-bit 4:2:0)의 아주 작은 AVIF를 실제로 디코딩해 보고 형식을 정한다.
+
+```js
+async function canDecode(uri) {
+  try {
+    const img = await decode(await (await fetch(uri)).blob());
+    img.close?.();
+    return true;
+  } catch {
+    return false;
+  }
+}
+let ext = formats.includes("avif") && (await canDecode(AVIF_PROBE)) ? "avif" : "webp";
+```
+
+### 무엇을 디코딩해 둘지 정하기
+
+`wanted()`는 디코딩해 둘 프레임을 급한 순서로 나열한다. 재생 위치가 가장 먼저이고, 이어서 첫·마지막 프레임, 그다음 바깥쪽이다. 바깥쪽은 스크롤 방향으로 두 장을 넣을 때마다 반대 방향으로 한 장을 넣는다. `schedule()`은 이 목록을 예산이 찰 때까지 담는다. 목록에서 빠진 비트맵은 `close()`로 해제하고, 없는 프레임은 동시에 3개까지 디코딩을 시작한다.
+
+```js
+const BUDGET = phone ? 60e6 : 150e6;
+const PARALLEL = 3;
+
+function wanted() {
+  const list = [playhead];
+  for (const [a, b] of BRIDGES) list.push(a, b);
+  list.push(0, count - 1);
+  for (let d = 1; d < count * 2; d++) {
+    list.push(playhead + heading * d);
+    if (d % 2 === 0) list.push(playhead - heading * (d / 2));
+  }
+  return list.filter((i) => i >= 0 && i < count);
+}
+
+function schedule() {
+  const next = new Set();
+  let bytes = 0;
+  for (const i of wanted()) {
+    if (next.has(i)) continue;
+    const b = estimate(i);
+    if (bytes + b > BUDGET && next.size) break;
+    next.add(i);
+    bytes += b;
+  }
+  keep = next;
+  for (const i of [...bitmaps.keys()]) if (!keep.has(i)) release(i);
+  // ... keep 안에서 아직 없는 프레임을 PARALLEL개까지 createImageBitmap으로 디코딩
+}
+```
+
+디코딩이 끝났을 때 사용자가 이미 스크롤해서 떠났으면 결과를 버린다. 디코딩이 스크롤을 따라가지 못하는 동안에는 디코딩된 프레임 중 가장 가까운 것을 그린다.
+
+```js {2}
+function store(i, img, xl) {
+  if (!keep.has(i)) { img.close?.(); return; } // scrolled away while decoding
+  const bytes = img.width * img.height * 4;
+  // ...
+}
+```
+
+### 대기 중에는 루프를 멈추기
+
+스크롤 이벤트와 새로 디코딩된 프레임이 `wake()`로 루프를 깨운다. 스크롤이 멈추고 다시 그릴 것이 없으면 루프가 스스로 멈춘다.
+
+```js {10-11}
+function wake() {
+  if (running) return;
+  running = true;
+  requestAnimationFrame(tick);
+}
+
+function tick() {
+  // ...
+  const gliding = bridgeT !== null && bridgeT !== 0 && bridgeT !== 1;
+  if (idle && !gliding && !redraw) running = false;
+  else requestAnimationFrame(tick);
+}
+
+addEventListener("scroll", wake, { passive: true });
+```
+
+<DecodeWindowDemo />
+
+## 결과
+
+변경 전후를 같은 방식(3회 측정의 중앙값, 빈 캐시)으로 측정했다. 저사양 Android는 데스크톱 Chrome에 412×915 화면, 1.6Mbps 네트워크, CPU 4배 감속을 건 에뮬레이션이다. iPhone은 Playwright WebKit으로 근사했다.
+
+| 기준 | 데스크톱 (1440×900 @2x) | 저사양 Android 에뮬레이션 | iPhone 근사 (WebKit) |
+|---|---|---|---|
+| 프레임 전송량 | 24.7 → 18.7MB (−24%) | 6.8 → 6.0MB (−12%) | 6.7 → 6.0MB (−10%) |
+| 스크롤 가능해지는 시점 | 1466 → 1240ms (−15%) | 6.6 → 6.1s (−7%) | 340 → 270ms |
+| 전체 프레임 도착 | 13.8 → 10.8s (−22%) | 42.8 → 39.0s (−9%) | 1.3 → 1.2s |
+| 스크롤 중 끊긴 프레임 | 289 → 0 | 0 → 0 | 0 → 0 |
+| 스크롤 후 메모리 | 1692 → 898MB | 758 → 661MB (−13%) | 225 → 254MB (+13%) |
+| 메모리 피크 | 1746 → 1254MB (−28%) | 810 → 709MB (−12%) | 282 → 318MB (+13%) |
+| 대기 중 렌더 루프 | 100% → 0% | 100% → 0% | 100% → 0% |
+
+새 방식에서 새로 생길 수 있는 부작용도 함께 쟀다. 디코딩이 스크롤을 못 따라가 이웃 프레임이 보인 밀린 프레임은 모든 시나리오에서 0이었다. 같은 스크롤 위치의 전후 스크린샷을 비교한 SSIM은 데스크톱 0.969–0.997, Android 에뮬레이션 0.976–0.999였다.
+
+데스크톱 스크롤 후 메모리는 −47%로 나왔지만, 변경 전 값은 측정마다 편차가 있었다. 정식 측정 3회는 1691–1692MB로 일정했지만, 사전 점검 때 한 번은 1246MB가 나왔다. 그 값과 비교하면 −28%라서, 실제 절감 폭은 28%에서 47% 사이로 본다.
+
+대기 중 메인 스레드 시간은 데스크톱 31.6 → 10.2ms/s, Android 14.9 → 8.6ms/s로 줄었다. 남은 8–10ms/s는 측정 도구 자체의 비용이고, 페이지의 렌더 루프는 0%다.
+
+나빠진 것도 있다.
+
+- **WebKit에서 메모리가 약 30MB(+13%) 늘었다.** WebKit은 `img`의 디코딩 결과를 적극적으로 버리는데, 새 방식은 예산(60MB)만큼 디코딩된 프레임을 붙잡고 있다. 늘어난 양이 예산과 거의 같다.
+- **데스크톱 첫 이미지 표시는 333 → 339ms로 개선되지 않았다.** AVIF 지원 여부를 확인하는 단계가 추가됐기 때문이다.
+
+모바일 수치는 모두 에뮬레이션 값이다.
+
+## 다시 한다면?
+
+측정하면서 남은 일이 몇 가지 드러났다.
+
+- **휴대폰 예산은 실기기에서 다시 정해야 한다.** WebKit에서 메모리가 늘어난 만큼 휴대폰 `BUDGET`을 30MB 정도로 낮출 수 있다. 다만 낮추면 빠르게 스크롤할 때 밀린 프레임이 생길 수 있어서, 실기기에서 확인한 뒤 조정해야 한다.
+- **배포할 때 `.avif`를 `image/avif`로 서빙해야 한다.** 측정에 쓴 정적 서버는 `.avif`에 Content-Type을 붙이지 않았다. 브라우저가 내용을 보고 판별해서 동작은 했지만, 이 동작에 기대면 안 된다.
