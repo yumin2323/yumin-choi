@@ -1,5 +1,5 @@
 import { Hero } from "@/components/hero";
-import { ArrowLink, Num, READING, SHELL, Section, TextLink } from "@/components/section";
+import { ArrowLink, Num, OutcomeLine, READING, SHELL, Section, TextLink } from "@/components/section";
 import { formatDate, getPosts } from "@/lib/blog";
 import { about, expertise, findWork, profile, selectedWork } from "@/lib/resume";
 
@@ -51,12 +51,17 @@ export default async function HomePage() {
                   {item.title}
                 </h3>
                 <p className="mt-3 text-[15px] leading-[1.8] text-sub">{item.text}</p>
+                {work.outcome && (
+                  <div className="mt-2">
+                    <OutcomeLine outcome={work.outcome} />
+                  </div>
+                )}
                 <p className="mt-3 text-sm text-muted">
                   {work.name} · {work.category}
                 </p>
                 <p className="mt-3 flex flex-wrap gap-x-6 gap-y-1">
                   <ArrowLink href={`/resume#${work.id}`}>경력에서 보기</ArrowLink>
-                  {work.post && <ArrowLink href={`/blog/${work.post}`}>관련 글</ArrowLink>}
+                  {work.post && <ArrowLink href={`/blog/${work.post}`}>문제 해결 과정과 데모</ArrowLink>}
                 </p>
               </li>
             );
@@ -87,9 +92,9 @@ export default async function HomePage() {
         <dl className="space-y-2 text-[15px]">
           {(
             [
-              ["Email", `mailto:${profile.email}`, profile.email],
-              ...profile.links.map(({ label, href }) => [label, href, href.replace(/^https?:\/\//, "")]),
               ["Resume", "/resume", "경력 자세히 보기"],
+              ...profile.links.map(({ label, href }) => [label, href, href.replace(/^https?:\/\//, "")]),
+              ["Email", `mailto:${profile.email}`, profile.email],
             ] as const
           ).map(([label, href, text]) => (
             <div key={label} className="grid grid-cols-[80px_minmax(0,1fr)] gap-4">

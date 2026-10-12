@@ -19,6 +19,8 @@ export type Work = {
   url?: string;
   tagline: string;
   outcome?: Outcome;
+  /** 사용자·고객 관점의 제품 성과 한 줄 */
+  impact?: string;
   stack: string[];
   highlights: Highlight[];
   /** 관련 블로그 글의 slug (content/blog/<slug>.mdx) */
@@ -73,7 +75,6 @@ export const expertise: Expertise[] = [
       "대규모 그래프",
       "워크플로우 에디터",
       "데이터 그리드",
-      "다단계 설정 화면",
     ],
   },
   {
@@ -83,25 +84,24 @@ export const expertise: Expertise[] = [
       "렌더링 병목 분석",
       "상태 관리 구조 개선",
       "실시간 이벤트 처리",
-      "데이터 흐름 최적화",
     ],
   },
   {
     title: "제품 전체를 보는 개발",
     text: "화면에서 그치지 않고 서비스가 운영되는 전 과정을 함께 봅니다.",
-    items: ["프론트엔드 구현", "API 설계와 연동", "배포와 운영", "모니터링"],
+    items: ["API 설계와 연동", "배포와 운영", "모니터링"],
   },
 ];
 
 export const selectedWork: SelectedWork[] = [
   {
     title: "대규모 데이터를 빠르게 그립니다",
-    text: "4,000개가 넘는 노드를 처리하는 모델 그래프의 렌더링 시간을 172.64초에서 18.85초로 줄였습니다.",
+    text: "4,000개가 넘는 노드를 처리하는 모델 그래프에서 레이아웃과 탐색의 병목을 측정으로 찾아 제거했습니다.",
     work: "owlite",
   },
   {
     title: "반복 작업을 없애는 구조를 만듭니다",
-    text: "OpenAPI 스키마로 입력 화면을 자동 생성해, 모델 추가 비용이 모델 수가 아닌 입력 타입 종류 수에 비례하도록 바꿨습니다. 도입 후 5개월간 새 모델은 스키마만으로 폼이 만들어졌습니다.",
+    text: "OpenAPI 스키마로 모델 입력 화면을 자동 생성하는 구조를 만들었습니다. 도입 후 5개월간 새 모델은 입력 타입과 위젯 추가 없이 스키마만으로 폼이 만들어졌습니다.",
     work: "yetter",
   },
   {
@@ -119,12 +119,13 @@ export const works: Work[] = [
     period: "2025 – 현재",
     url: "https://yetter.ai/",
     tagline:
-      "노드를 이어 이미지와 비디오를 생성하는 AI 서비스입니다. 프론트엔드를 처음부터 설계했습니다.",
+      "노드를 이어 이미지와 비디오를 생성하는 AI 서비스입니다. 프론트엔드를 1인 담당으로 처음부터 설계했습니다.",
     outcome: {
       before: "모델 수",
       after: "입력 타입 수",
       caption: "모델 추가 비용이 비례하는 기준 전환",
     },
+    impact: "Modular와 MAX 프레임워크 확장을 위한 MOU 체결",
     stack: [
       "Next.js",
       "TypeScript",
@@ -163,17 +164,18 @@ export const works: Work[] = [
     category: "모델 분석 도구",
     period: "2022 – 2025",
     tagline:
-      "딥러닝 모델의 구조를 그래프로 탐색하고 양자화 설정을 다루는 모델 분석 서비스입니다.",
+      "딥러닝 모델의 구조를 그래프로 탐색하고 양자화 설정을 다루는 모델 분석 서비스입니다. 2025년에 서비스를 종료했습니다.",
     outcome: {
       before: "172.64초",
       after: "18.85초",
-      caption: "대규모 모델 그래프 렌더링 시간 89% 단축",
+      caption: "대규모 모델 그래프의 최초 레이아웃 계산 시간 89% 단축",
     },
+    impact: "PoC 5건을 정식 도입으로 전환",
     stack: ["React", "SVG", "Redux", "Emotion", "MUI"],
     highlights: [
       {
-        title: "대규모 모델 그래프 렌더링 시간 89% 단축",
-        text: "Stable Diffusion UNet XL 기준 렌더링 시간을 **172.64초에서 18.85초로 단축**",
+        title: "대규모 모델 그래프 최초 레이아웃 계산 시간 89% 단축",
+        text: "Stable Diffusion UNet XL 기준, 그래프를 처음 여는 레이아웃 계산 1회 시간을 **172.64초에서 18.85초로 단축**",
         details: [
           "SVG와 HTML DOM을 결합한 그래프 뷰어에서 대규모 모델(노드 4,000개 이상) 처리 시 수 분의 지연 발생",
           "그래프 규모에 따라 레이아웃 알고리즘을 분기하고, O(n²) 배열 탐색과 재귀 처리 등 주요 병목 제거",
@@ -196,7 +198,13 @@ export const works: Work[] = [
     category: "LLM 벤치마크",
     period: "2023 – 2025",
     tagline:
-      "LLM 벤치마크를 실행하고 모델·하드웨어별 성능을 비교하는 서비스입니다.",
+      "LLM 벤치마크를 실행하고 모델·하드웨어별 성능을 비교하는 서비스입니다. 2025년에 서비스를 종료했습니다.",
+    outcome: {
+      before: "셀 수만큼",
+      after: "1건",
+      caption: "다중 셀 붙여넣기 시 서버 요청",
+    },
+    impact: "가입 사용자 100명 이상 확보",
     stack: ["AG Grid", "Nivo", "React", "Redux", "Emotion", "MUI"],
     highlights: [
       {
@@ -255,12 +263,16 @@ export const works: Work[] = [
   },
 ];
 
+/** 경력 섹션 첫머리의 한 문장. 혼자 0에서 1까지 완성한 경험을 앞세운다 */
+export const careerSummary =
+  "프론트엔드 1인 담당으로 네 제품을 기술 선정부터 배포와 운영까지 혼자 맡아, 처음부터 정식 서비스로 완성했습니다.";
+
 export const timeline: TimelineItem[] = [
   {
     company: "스퀴즈비츠",
     period: "2022.10 – 현재",
     summary:
-      "Owlite, FitsOnChips, Yetter, 공식 웹사이트의 프론트엔드를 담당하고 있습니다.",
+      "Owlite, FitsOnChips, Yetter, 공식 웹사이트의 프론트엔드를 맡고 있습니다.",
     current: true,
   },
   {
@@ -308,7 +320,6 @@ export const skills: SkillGroup[] = [
     title: "백엔드와 운영",
     items: ["FastAPI", "MongoDB", "Sentry", "GA4/GTM"],
   },
-  { title: "AI 도구", items: ["Claude", "Cursor AI"] },
 ];
 
 export function findWork(id: Work["id"]) {
