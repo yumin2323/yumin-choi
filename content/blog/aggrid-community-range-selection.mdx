@@ -1,0 +1,233 @@
+export const metadata = {
+  title: "무료 AG Grid에 없는 엑셀식 범위 선택을 직접 붙인 과정",
+  description: "ag-grid-community v32에는 셀 범위 선택이 없어서 react-selecto로 드래그 선택을 만들고, 범위 테두리·복사·붙여넣기·채우기 핸들·키보드 선택을 직접 구현했다.",
+  date: "2024-12-18",
+  tags: ["UI 인터랙션", "표", "AG Grid"],
+  work: "fitsonchips",
+};
+
+## 문제 상황
+
+실험 목록 표에서 엑셀처럼 셀 여러 개를 드래그로 묶어 선택하고, 그 범위를 복사·붙여넣기하거나 채우기 핸들로 끌어서 채울 수 있어야 했다.
+
+표는 `ag-grid-community`/`ag-grid-react` ^32.0.2로 그리고 있었는데, 이 버전의 community 패키지에는 셀 범위 선택 기능이 없었다.
+
+## 기존 구조
+
+실험 표는 화면 컴포넌트 한 파일(`Experiment.js`)에 있었고, 공용 그리드 래퍼(`Aggrid.js`)에 컬럼 정의와 이벤트 핸들러를 넘기는 구조였다. 행·열 가상 스크롤은 켜져 있었다.
+
+```tsx
+<Aggrid
+    gridOptions={columns(onCellClicked)}
+    rowData={searchExperiments}
+    rowSelection="multiple"
+    // ...
+    onCellKeyDown={onCellKeyDown}
+    suppressColumnVirtualisation={false}
+    suppressRowVirtualisation={false}
+/>
+```
+
+## 문제 원인
+
+그리드가 범위 선택을 주지 않으니, 선택 자체를 그리드 밖에서 DOM 기준으로 만들어야 했다. 이렇게 하면 두 가지가 그리드 내부 구조와 부딪혔다.
+
+첫째, 선택 대상이 DOM에 있는 `.ag-cell`뿐이다. 가상 스크롤이 켜져 있으면 화면 밖 셀은 DOM에 없어서 드래그 범위에 잡히지 않는다. `getRenderedNodes()` 개수와 선택된 셀 개수를 함께 찍어 보면서 이 차이를 확인했다.
+
+둘째, AG Grid는 가로 스크롤 영역과 세로 스크롤 영역이 따로 있다. 드래그가 화면 끝에 닿았을 때 어느 컨테이너를 스크롤할지 맞추려고, 마우스 위치에 따라 스크롤 컨테이너를 바꾸는 방식(`checkScroll`)을 시도했다가 주석으로 막아 두었다.
+
+```ts
+// // 마우스 위치에 따라 적절한 스크롤 컨테이너를 동적으로 설정
+// const handleMouseMove = (e) => {
+//     const horizontalViewport = document.querySelector(
+//         ".ag-body-horizontal-scroll-viewport"
+//     );
+//     const verticalViewport = document.querySelector(
+//         ".ag-body-vertical-scroll-viewport"
+//     );
+//     // ...
+// };
+```
+
+## 고려한 해결 방법
+
+먼저 AG Grid Enterprise 도입을 검토했다. 범위 선택, 채우기 핸들, 클립보드 복사·붙여넣기가 모두 Enterprise 기능이라, `ag-grid-enterprise` 패키지로 바꾸면 그리드 옵션으로 켤 수 있었다.
+
+하지만 이 화면에서 필요한 건 실험 표 하나의 범위 선택과 복사·붙여넣기·채우기 정도였고, 그 기능만 보고 라이선스를 사기에는 비용이 너무 컸다. Enterprise를 쓰더라도 행 데이터 안 객체에 들어 있는 설정 값, 벤치마크를 돌렸거나 돌리는 중인 실험의 수정 제한, 실험별로 묶어 저장하는 일은 결국 콜백과 이벤트로 직접 연결해야 했다. 그래서 community 버전을 유지하고 필요한 기능만 직접 만들기로 했다. 그 대신 선택 로직과 그리드 내부 구조를 맞추는 일, 그리고 이 코드를 계속 유지보수하는 일은 직접 떠안게 됐다.
+
+## 선택한 방법
+
+`react-selecto`로 드래그 선택을 직접 구현하고, 선택 범위의 테두리는 AG Grid의 `ag-cell-range-top/right/bottom/left` 클래스를 셀에 직접 붙여 그렸다. 새 선택이 시작되면 이전 선택 셀의 클래스부터 지운다.
+
+붙여넣기는 복사한 범위가 선택한 범위의 배수이면 반복해서 채우고, 붙여넣기 전 값은 `undoStack`에 쌓아 되돌릴 수 있게 했다. 채우기 핸들도 직접 만들었다.
+
+선택이 DOM에 있는 셀에만 걸리는 문제는 행·열 가상 스크롤을 모두 꺼서 모든 셀을 렌더링하는 쪽으로 정리했다. 이후 키보드로 셀을 이동하며 범위를 넓히는 기능과, 선택한 셀 쪽으로 스크롤을 옮기는 기능을 더했다.
+
+## 구현
+
+### 드래그 선택과 채우기 핸들을 Selecto 두 개로 나눴다
+
+셀 선택용과 채우기 핸들용 Selecto를 따로 두고, 드래그 시작 지점이 `.ag-fill-handle`인지로 둘 중 하나만 동작하게 했다. 스크롤은 그리드의 가로·세로 스크롤 영역 두 곳에 각각 넘긴다.
+
+```tsx
+<Selecto
+    ref={selectoRef}
+    container={".ag-body"}
+    selectableTargets={[".ag-cell"]}
+    toggleContinueSelect={isMac ? "meta" : "ctrl"}
+    scrollOptions={scrollOptions}
+    onScroll={onScroll}
+    onDragStart={(e) =>
+        !e.inputEvent.target.classList.contains("ag-fill-handle")
+    }
+    onSelect={onSelect}
+/>
+
+<Selecto
+    ref={selectoHandleRef}
+    container={".ag-body"}
+    selectableTargets={[".ag-cell", ".ag-fill-handle"]}
+    // ...
+    onDragStart={(e) =>
+        e.inputEvent.target.classList.contains("ag-fill-handle")
+    }
+    onSelect={onHandleSelect}
+    onSelectEnd={onHandleSelectEnd}
+/>
+```
+
+### 범위 테두리는 이웃 셀을 보고 직접 붙였다
+
+선택된 셀마다 위·아래·왼쪽·오른쪽 이웃이 선택돼 있는지 보고, 이웃이 없는 방향에만 `ag-cell-range-*` 클래스를 붙인다. 행 번호는 행 요소의 `row-index`, 열 번호는 셀의 `aria-colindex`에서 읽는다.
+
+```ts
+const selectedIndices = selectedCells.map((el) => ({
+    element: el,
+    colIndex: Number(el.getAttribute("aria-colindex")),
+    rowIndex: Number(el.parentElement?.getAttribute("row-index")),
+}));
+
+selectedIndices.forEach(({ element, colIndex, rowIndex }) => {
+    const topCellSelected = selectedIndices.some(
+        (cell) => cell.rowIndex === rowIndex - 1 && cell.colIndex === colIndex
+    );
+    // ... bottom / left / right도 같은 방식
+
+    updateElementClass(
+        element,
+        [!topCellSelected, !bottomCellSelected, !leftCellSelected, !rightCellSelected],
+        ["ag-cell-range-top", "ag-cell-range-bottom", "ag-cell-range-left", "ag-cell-range-right"]
+    );
+});
+```
+
+범위가 이어져 있으면 오른쪽 아래 셀에 `div.ag-fill-handle`을 붙여 채우기 핸들로 쓴다.
+
+처음에는 새 선택을 시작할 때 이전 셀에서 `ag-cell-range-selected` 등만 지우고 방향별 테두리 클래스는 남겼다. 그래서 `onSelectStart`에서 지우는 목록에 `ag-cell-range-top/right/left/bottom`을 추가했다.
+
+### 붙여넣기는 배수일 때 반복하고, 이전 값을 쌓아 둔다
+
+```ts {14-15,20}
+// copiedRange가 selectedRange의 배수인지 체크 (행/열 개수로 비교)
+const isRowMultiple =
+    targetRowCount > copiedRowCount
+        ? targetRowCount % copiedRowCount === 0
+        : true;
+// ... 열도 같은 방식
+
+const maxRowIndex = isRowMultiple
+    ? Math.max(targetRowCount, copiedRowCount)
+    : Math.min(targetRowCount, copiedRowCount);
+
+// target 범위를 돌면서
+beforePasteData.push({ rowIndex: targetRowIndex, colIndex: targetColIndex, data: existingData });
+const dataToPaste =
+    copiedDataList[rowIndex % copiedRowCount][colIndex % copiedColumnCount];
+// ...
+
+setCellData(newCellData);
+// 붙여넣기 전 상태를 undoStack에 추가
+setUndoStack((prev) => [...prev, beforePasteData]);
+```
+
+선택 범위가 복사 범위의 배수이면 선택 범위 전체를 복사 데이터로 반복해 채우고, 아니면 둘 중 작은 크기만큼만 붙여넣는다. 되돌리기(`Ctrl/Cmd+Z`)는 `undoStack`의 마지막 항목을 꺼내 같은 위치에 다시 쓴다. 채우기 핸들로 끌어서 채우는 경우(`onCellDataChanged`)도 같은 반복 규칙을 쓴다.
+
+### 가상 스크롤을 껐다
+
+```tsx {3-4}
+<Aggrid
+    // ...
+    suppressColumnVirtualisation={true}
+    suppressRowVirtualisation={true}
+/>
+```
+
+공용 래퍼에서 먼저 시험할 때는 `// 가상 스크롤 억제 (모든 데이터 렌더링)` 주석을 달아 두었고, 이후 실험 표에서 두 옵션을 `true`로 바꿨다.
+
+### 키보드로 범위를 넓히고, 끝 셀로 스크롤한다
+
+`Shift`+방향키를 누르면 포커스된 셀을 기준으로 범위를 한 칸 넓히거나 줄이고, 바뀐 직사각형에서 새로 들어온 셀과 빠진 셀을 계산해 위의 `onSelect`로 그대로 넘긴다.
+
+```ts
+switch (direction) {
+    case "ArrowRight":
+        if (focusedColIndex > minCol) {
+            minCol += 1; // 축소
+        } else {
+            maxCol += 1;
+        }
+        gridApi.ensureColumnVisible(gridApi.getColumns()[maxCol - 1]);
+        break;
+    case "ArrowDown":
+        if (focusedRowIndex > minRow) {
+            minRow += 1;
+        } else {
+            maxRow += 1;
+        }
+        gridApi.ensureIndexVisible(maxRow);
+        break;
+    // ...
+}
+```
+
+처음에는 왼쪽·위쪽 방향에서 `minCol`/`minRow` 쪽 끝으로, 오른쪽에서는 `maxCol`로 스크롤했는데, 이후 가로는 `maxCol - 1`, 세로는 `maxRow`로 통일했다. `aria-colindex`가 1부터 시작해서 컬럼 배열 인덱스로 쓸 때 1을 뺀다.
+
+### 바뀐 값은 실험별로 모아 한 번에 저장했다
+
+붙여넣기와 채우기는 화면만 바꾸지 않고 서버 저장까지 이어진다. 바뀐 셀을 실험(행) 단위로 모아 수정 요청을 한 번만 보내고, 벤치마크가 이미 돌았거나 도는 중인 실험은 이름 칸 말고는 건너뛴다. 바뀐 셀은 `flashCells`로 잠깐 표시한다.
+
+```ts
+const updateData = newCellData.reduce((acc, { rowNode, column, data }) => {
+    // 벤치마크를 돌렸거나 돌리는 중인 실험은 이름 외 수정 불가
+    if (isLocked(rowNode.data) && column.colId !== "name") {
+        return acc;
+    }
+    // ... 셀 값 반영, results에 바뀐 필드 담기
+    gridApi.flashCells({ rowNodes: [rowNode], columns: [column.colId] });
+
+    acc[rowNode.data.id] = {
+        id: rowNode.data.id,
+        ...acc[rowNode.data.id],
+        ...results,
+    };
+    return acc;
+}, {});
+
+if (Object.keys(updateData).length > 0) {
+    editExperiment(Object.values(updateData));
+}
+```
+
+<CellRangeDemo />
+
+## 결과
+
+키보드 선택과 스크롤 이동까지 더한 뒤로는 구조를 다시 갈아엎을 일이 없었다. 드래그 선택·복사·붙여넣기·채우기 핸들·되돌리기와 가상 스크롤을 끈 설정은 서비스를 종료할 때까지 그대로 썼다.
+
+가상 스크롤을 끄는 비용은 실험 표 하나로 한정했다. 공용 그리드 래퍼에서는 `suppressRowVirtualisation`과 `suppressColumnVirtualisation`을 prop으로 열고 기본값을 `false`로 두어, 다른 표는 가상 스크롤을 그대로 쓴다.
+
+## 다시 한다면?
+
+가상 스크롤을 끈 건 기능을 위해 성능을 내준 선택이었다. 선택·테두리·붙여넣을 범위·키보드 이동이 모두 DOM에 그려진 `.ag-cell`과 그 속성(`row-index`, `aria-colindex`)을 기준으로 동작했기 때문에, 화면 밖 셀까지 다루려면 모든 셀이 DOM에 있어야 했다. 그 대가로 행과 열이 늘어날수록 그리는 셀 수도 그대로 늘어난다.
+
+지금은 값을 쓰고 되돌리는 쪽은 인덱스로 처리하지만, 선택과 복사 범위는 Selecto가 가진 DOM 요소 목록이 기준이고 인덱스는 그 요소의 속성에서 읽어 온다. 다시 한다면 선택 범위 자체를 인덱스로 들고, Selecto는 그 범위를 바꾸는 입력으로만 쓰겠다. 테두리는 그리드가 셀을 그릴 때 그 범위를 보고 클래스를 붙이게 하면, 화면 밖 셀이 DOM에 없어도 선택이 유지되고 가상 스크롤을 끄지 않아도 된다.

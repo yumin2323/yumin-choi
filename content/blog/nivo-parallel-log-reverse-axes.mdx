@@ -1,0 +1,200 @@
+export const metadata = {
+  title: "평행좌표 차트의 축마다 log와 reverse를 따로 주려고 Nivo 기본 축 레이어를 갈아 끼운 과정",
+  description: "Nivo 평행좌표 차트에서 지표마다 log·reverse 축과 사용자 지정 범위가 필요해, 기본 축 레이어 대신 지표별 d3 스케일로 그리는 레이어를 직접 만들었다. 그리면서 잘못된 값을 0으로 숨기던 처리를 에러 표시로 바꾸고, 선의 호버 영역을 넓혔다.",
+  date: "2025-02-10",
+  tags: ["데이터 시각화", "차트", "Nivo"],
+  work: "fitsonchips",
+};
+
+## 문제 상황
+
+실험마다 설정값과 결과값을 평행좌표 차트로 한눈에 비교하는 화면이 있었다. 사용자는 표에서 차트에 넣을 지표를 고르고, 지표마다 최솟값·최댓값, log, reverse를 정할 수 있어야 했다.
+
+차트는 Nivo 0.87의 `ResponsiveParallelCoordinates`로 그렸다. 만들면서 세 가지 문제가 드러났다.
+
+- 지표마다 log 축과 뒤집힌 축을 따로 줘야 했다.
+- 숫자가 아닌 값이 섞이면 0으로 바뀐 채 정상 그래프처럼 그려졌다.
+- 선 위에 마우스를 올려야 툴팁이 뜨는데, 선 두께가 2px라 정확히 올리기 어려웠다.
+
+## 기존 구조
+
+처음에는 Nivo의 기본 `"axes"` 레이어를 그대로 쓰고, 지표 설정에 log 옵션을 넣어 두었다.
+
+```jsx
+v.push({
+    id: node.data.name,
+    type: "log",
+    base: 10,
+    label: node.data.name,
+    value: node.data.name,
+    // min: 0,
+    // max: "auto",
+    ticksPosition: "before",
+    // ...
+});
+
+// ...
+layers={[CustomComponent, "axes", "legends"]}
+```
+
+차트에 넣는 값과 범위는 이렇게 만들었다.
+
+```jsx
+tmpData[data.id] = value && !isNaN(Number(value)) ? value : 0;
+
+// ...
+min: node.data.min || "auto",
+max: node.data.max || "auto",
+```
+
+툴팁은 MUI `Tooltip`으로 `strokeWidth={2}`인 `path` 하나를 감싸고 있었다.
+
+## 문제 원인
+
+- **축 스케일**: Nivo 0.87은 지표마다 `scaleLinear().domain([min, max])` 하나만 만든다. 소스 주석에도 선형 스케일만 지원한다고 적혀 있다. 그래서 지표 설정에 넣은 `type: "log"`는 축에도 선에도 쓰이지 않고, 뒤집힌 축을 만들 방법도 없다.
+- **값 처리**: 숫자로 바꿀 수 없는 값을 0으로 채웠다. 잘못된 데이터가 차트에서 정상값처럼 보였고, log 축에는 0을 놓을 자리가 없다.
+- **호버**: 마우스 이벤트가 2px짜리 선 자체에만 걸려 있었다.
+
+## 고려한 해결 방법
+
+처음에는 Nivo 지표 설정에 `type: "log"`를 넣고 기본 `"axes"` 레이어를 그대로 쓰려고 했다. 하지만 Nivo 0.87은 이 설정을 축에도 선에도 쓰지 않아서 설정만으로는 해결되지 않았다. 남은 방법은 축을 그리는 레이어를 직접 만드는 것이었다.
+
+## 선택한 방법
+
+축과 선을 그리는 레이어를 직접 만들었다. 선 좌표 계산과 선 생성기는 Nivo에 그대로 맡기고, 축은 지표마다 d3 스케일을 만들어 눈금과 함께 직접 그린다. 이렇게 하면 log와 reverse를 지표 단위로 켜고 끌 수 있다.
+
+값이 잘못되면 0으로 바꿔 그리지 않고 차트 대신 에러 문구를 보여 주도록 바꿨다. 툴팁은 Nivo의 `useTooltip`으로 바꾸고, 마우스를 잡는 영역은 보이지 않는 두꺼운 선으로 넓혔다.
+
+## 구현
+
+### 1. 기본 축 레이어 교체
+
+먼저 개발 환경에서만 열리는 `/test` 경로에서 커스텀 축 레이어를 시험했다. 이후 실제 차트의 레이어 목록을 바꿨다.
+
+```jsx {5}
+<ResponsiveParallelCoordinates
+    variables={[...chartVariables, ...chartResults]}
+    data={chartData}
+    curve="natural"
+    layers={[CustomLinesLayer, CustomAxesLayer, "legends"]}
+/>
+```
+
+### 2. 지표마다 스케일 만들기
+
+각 축은 지표 설정의 `log`, `reverse`, `min`, `max`로 자기 스케일을 만든다. reverse이면 domain의 순서를 뒤집는다. log 축은 0을 표현할 수 없어서 하한을 1로 올린다.
+
+```jsx {9,15}
+const logMin = Math.max(min, 1);
+const range = [innerHeight, 0];
+
+// reverse인 경우 min, max 순서 변경
+const scale = variable.log
+    ? castLinearScale(
+          scaleLog()
+              .rangeRound(range)
+              .domain(variable.reverse ? [max, logMin] : [logMin, max])
+              .base(10)
+      )
+    : castLinearScale(
+          scaleLinear()
+              .rangeRound(range)
+              .domain(variable.reverse ? [max, min] : [min, max])
+      );
+```
+
+### 3. log 축 눈금
+
+log 축의 눈금은 10의 거듭제곱만 남겼다. 그런데 사용자가 좁은 범위를 지정하면 그 안에 거듭제곱이 하나도 없을 수 있다. 그럴 때는 범위 양 끝의 지수로 눈금을 만들고 domain도 그 눈금에 맞춰 다시 잡는다.
+
+```jsx
+const logTicks = scale
+    .ticks()
+    .filter((tick) => Number.isInteger(Math.log10(tick)));
+
+if (logTicks.length === 0) {
+    const minExp = Math.ceil(Math.log10(Math.max(logMin, 1)));
+    const maxExp = Math.floor(Math.log10(max));
+    // ...
+    generatedTicks = Array.from(
+        { length: maxExp - minExp + 1 },
+        (_, i) => 10 ** (minExp + i)
+    );
+    // ...
+    scale.domain([Math.min(...generatedTicks), Math.max(...generatedTicks)]);
+    return generatedTicks;
+}
+return logTicks;
+```
+
+선 좌표 문제는 '다시 한다면?'에서 다룬다.
+
+### 4. 잘못된 값은 그리지 않기
+
+검증은 세 번에 걸쳐 바꿨다.
+
+1. 0으로 채우던 처리를 없앴다. 숫자가 아니거나, log 축인데 값이 0이면 차트 데이터를 `null`로 두고 에러 문구를 보여 준다.
+2. 처음 검사는 `typeof value !== "number"`였다. 이를 `isNaN(Number(value?.toString()))`으로 바꿔 숫자로 바꿀 수 있는 값은 통과시켰다.
+3. log 축에 사용자가 최솟값이나 최댓값으로 0을 넣은 경우도 에러로 처리했다.
+
+```jsx
+if (
+    !isError &&
+    (isNaN(Number(value?.toString())) || (data.log && value === 0))
+) {
+    isError = true;
+    return;
+}
+
+// ...
+const min = node.data.min !== "" ? node.data.min : "auto";
+const max = node.data.max !== "" ? node.data.max : "auto";
+
+if (node.data.log && (Number(min) === 0 || Number(max) === 0)) {
+    isError = true;
+}
+```
+
+범위 판정도 0을 falsy로 보는 `||` 대신 빈 문자열만 auto로 보는 `!== ""`로 바꿨다. 에러일 때는 차트 자리에 "Please recheck the domain or range." 안내를 띄운다.
+
+### 5. 호버 영역 넓히기
+
+보이는 선은 그대로 2px로 두었다. 그 위에 같은 경로를 투명한 10px 선으로 한 번 더 그려, 마우스가 선 근처에만 있어도 툴팁이 뜨게 했다.
+
+```jsx {15-16}
+<Fragment key={i}>
+    <animated.path
+        d={pathData}
+        fill="none"
+        stroke={rgba}
+        strokeWidth={2}
+        onMouseEnter={handleMouseHover}
+        onMouseMove={handleMouseHover}
+        onMouseLeave={hideTooltip}
+    />
+    {/* outline */}
+    <animated.path
+        d={pathData}
+        fill="none"
+        stroke="transparent"
+        strokeWidth={10}
+        onMouseEnter={handleMouseHover}
+        onMouseMove={handleMouseHover}
+        onMouseLeave={hideTooltip}
+    />
+</Fragment>
+```
+
+아래 데모에서 축마다 log와 reverse를 켜고 끌 수 있다. 호버 영역을 2px 선만으로 바꾸면 툴팁을 띄우기가 얼마나 어려운지도 비교할 수 있다.
+
+<ParallelAxesDemo />
+
+## 결과
+
+라이브러리에 원래 없던 지표별 log·reverse 축과 사용자 지정 범위를 커스텀 레이어로 만들어, 프로젝트 기획에 맞게 쓸 수 있었다. 잘못된 값은 0으로 숨겨지는 대신 에러 안내로 드러났고, 툴팁은 선 근처에만 마우스를 올려도 뜨게 됐다.
+
+## 다시 한다면?
+
+축은 직접 만든 스케일로 그렸지만, 선은 Nivo가 계산한 `data.points`를 `lineGenerator`에 그대로 넘겨 그렸다. Nivo 0.87은 이 좌표를 log·reverse 설정과 상관없이 데이터 범위의 선형 스케일로 계산한다. 그래서 log나 reverse를 켠 축에서는 선이 눈금과 다른 위치를 지난다. 데모의 "선 좌표" 토글을 "Nivo 방식"으로 바꾸면 이 차이를 볼 수 있다.
+
+다시 한다면 선의 좌표도 눈금과 같은 축 스케일로 직접 계산하겠다. 축과 선이 같은 스케일 하나를 공유해야 커스텀 축이 의미를 가진다.
