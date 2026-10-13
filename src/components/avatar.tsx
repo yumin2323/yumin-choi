@@ -3,7 +3,12 @@
 
 export function Avatar({ className = "" }: { className?: string }) {
   return (
-    <svg viewBox="0 0 120 120" role="img" aria-label="안경을 쓴 긴 머리 캐릭터" className={`block rounded-full ${className}`}>
+    <svg
+      viewBox="0 0 120 120"
+      role="img"
+      aria-label="안경을 쓴 긴 머리 캐릭터"
+      className={`block rounded-full ${className}`}
+    >
       <rect width="120" height="120" fill="var(--avatar-bg)" />
       {/* 뒷머리 */}
       <path d="M32 58 C31 33 45 21 60 21 C75 21 89 33 88 58 L90 104 L30 104 Z" fill="var(--avatar-hair)" />
@@ -32,7 +37,13 @@ export function Avatar({ className = "" }: { className?: string }) {
       {/* 볼·입 */}
       <ellipse cx="46.5" cy="65" rx="2.8" ry="1.6" fill="var(--avatar-blush)" opacity="0.5" />
       <ellipse cx="73.5" cy="65" rx="2.8" ry="1.6" fill="var(--avatar-blush)" opacity="0.5" />
-      <path d="M57 67 Q60 69.5 63 67" fill="none" stroke="var(--avatar-mouth)" strokeWidth="1.6" strokeLinecap="round" />
+      <path
+        d="M57 67 Q60 69.5 63 67"
+        fill="none"
+        stroke="var(--avatar-mouth)"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+      />
     </svg>
   );
 }

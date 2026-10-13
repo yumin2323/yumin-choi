@@ -118,7 +118,8 @@
   --color-accent-soft: var(--accent-soft);
   --color-gold: var(--gold);
 
-  --font-sans: var(--font-plex), -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", "Segoe UI", sans-serif;
+  --font-sans:
+    var(--font-plex), -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", "Segoe UI", sans-serif;
   --font-mono: SFMono-Regular, Menlo, Consolas, monospace;
 }
 

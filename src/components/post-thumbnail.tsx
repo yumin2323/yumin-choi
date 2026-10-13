@@ -82,7 +82,12 @@ export function PostThumbnail({ slug, className = "" }: { slug: string; classNam
   const thumbnail = thumbnails[slug];
   if (!thumbnail) return null;
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={thumbnail.label} className={`block h-auto w-full rounded-[10px] ${className}`}>
+    <svg
+      viewBox={`0 0 ${W} ${H}`}
+      role="img"
+      aria-label={thumbnail.label}
+      className={`block h-auto w-full rounded-[10px] ${className}`}
+    >
       <rect width={W} height={H} fill={C.bg} />
       {thumbnail.draw()}
     </svg>
@@ -95,7 +100,21 @@ function GoldDot({ x, y }: { x: number; y: number }) {
 }
 
 /** 노드·카드·입력 칸. hot이면 강조 */
-function Box({ x, y, w, h, hot = false, r = RADIUS.node }: { x: number; y: number; w: number; h: number; hot?: boolean; r?: number }) {
+function Box({
+  x,
+  y,
+  w,
+  h,
+  hot = false,
+  r = RADIUS.node,
+}: {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  hot?: boolean;
+  r?: number;
+}) {
   return (
     <rect
       x={x}
@@ -118,7 +137,17 @@ function Bar({ x, y, w, fill = C.line }: { x: number; y: number; w: number; fill
 /** 비활성 칸: 점선 테두리만 있고 안은 배경색 */
 function GhostBox({ x, y, w, h, r = RADIUS.node }: { x: number; y: number; w: number; h: number; r?: number }) {
   return (
-    <rect x={x} y={y} width={w} height={h} rx={r} fill={C.bg} stroke={C.muted} strokeWidth={STROKE.base} strokeDasharray="10 10" />
+    <rect
+      x={x}
+      y={y}
+      width={w}
+      height={h}
+      rx={r}
+      fill={C.bg}
+      stroke={C.muted}
+      strokeWidth={STROKE.base}
+      strokeDasharray="10 10"
+    />
   );
 }
 
@@ -134,9 +163,11 @@ function SelectedNode() {
   const selected = { c: 1, r: 1 };
   const node = { x: cols[selected.c], y: rows[selected.c][selected.r] };
 
-  const edges = cols.slice(0, -1).flatMap((x, c) =>
-    rows[c].flatMap((y1) => rows[c + 1].map((y2) => ({ x1: x + nw / 2, y1, x2: cols[c + 1] - nw / 2, y2 }))),
-  );
+  const edges = cols
+    .slice(0, -1)
+    .flatMap((x, c) =>
+      rows[c].flatMap((y1) => rows[c + 1].map((y2) => ({ x1: x + nw / 2, y1, x2: cols[c + 1] - nw / 2, y2 }))),
+    );
 
   // 사이드바 설정 줄: 키 길이, 값 길이. 가운데 줄이 바뀐 설정
   const settings = [
@@ -156,7 +187,14 @@ function SelectedNode() {
       ))}
       {cols.map((x, c) =>
         rows[c].map((y, r) => (
-          <Box key={`${x}-${y}`} x={x - nw / 2} y={y - nh / 2} w={nw} h={nh} hot={c === selected.c && r === selected.r} />
+          <Box
+            key={`${x}-${y}`}
+            x={x - nw / 2}
+            y={y - nh / 2}
+            w={nw}
+            h={nh}
+            hot={c === selected.c && r === selected.r}
+          />
         )),
       )}
 
@@ -435,10 +473,26 @@ function CellRange() {
         strokeWidth={STROKE.base}
       />
       {Array.from({ length: rows }, (_, r) => (
-        <line key={`h${r}`} x1={SAFE.left} x2={SAFE.right} y1={rowY(r)} y2={rowY(r)} stroke={C.line} strokeWidth={STROKE.base} />
+        <line
+          key={`h${r}`}
+          x1={SAFE.left}
+          x2={SAFE.right}
+          y1={rowY(r)}
+          y2={rowY(r)}
+          stroke={C.line}
+          strokeWidth={STROKE.base}
+        />
       ))}
       {Array.from({ length: cols }, (_, c) => (
-        <line key={`v${c}`} x1={colX(c)} x2={colX(c)} y1={SAFE.top} y2={SAFE.bottom} stroke={C.line} strokeWidth={STROKE.base} />
+        <line
+          key={`v${c}`}
+          x1={colX(c)}
+          x2={colX(c)}
+          y1={SAFE.top}
+          y2={SAFE.bottom}
+          stroke={C.line}
+          strokeWidth={STROKE.base}
+        />
       ))}
 
       {/* 열 이름과 행 번호 */}
@@ -455,13 +509,26 @@ function CellRange() {
       {cells.map((row, r) =>
         row.map((w, c) =>
           w > 0 ? (
-            <Bar key={`${r}-${c}`} x={colX(c) + 28} y={rowY(r) + rowH / 2} w={w} fill={inRange(r, c) ? C.accent : C.line} />
+            <Bar
+              key={`${r}-${c}`}
+              x={colX(c) + 28}
+              y={rowY(r) + rowH / 2}
+              w={w}
+              fill={inRange(r, c) ? C.accent : C.line}
+            />
           ) : null,
         ),
       )}
 
       {/* 채우기 핸들 */}
-      <circle cx={sel.x + sel.w} cy={sel.y + sel.h} r={DOT.strong} fill={C.accent} stroke={C.bg} strokeWidth={STROKE.strong} />
+      <circle
+        cx={sel.x + sel.w}
+        cy={sel.y + sel.h}
+        r={DOT.strong}
+        fill={C.accent}
+        stroke={C.bg}
+        strokeWidth={STROKE.strong}
+      />
       <GoldDot x={sel.x + sel.w} y={sel.y} />
     </g>
   );

@@ -45,9 +45,15 @@ export function TextLink({ href, children }: { href: string; children: ReactNode
 /** "관련 글 →" 같은 이동 링크. 화살표만 골드, hover 시 골드 밑줄이 그어짐 */
 export function ArrowLink({ href, children }: { href: string; children: ReactNode }) {
   return (
-    <Link href={href} className="group inline-flex items-baseline gap-1.5 text-sm text-body transition-colors hover:text-heading">
+    <Link
+      href={href}
+      className="group inline-flex items-baseline gap-1.5 text-sm text-body transition-colors hover:text-heading"
+    >
       <span className="link-underline">{children}</span>
-      <span aria-hidden="true" className="text-gold transition-transform group-hover:translate-x-0.5 motion-reduce:transition-none">
+      <span
+        aria-hidden="true"
+        className="text-gold transition-transform group-hover:translate-x-0.5 motion-reduce:transition-none"
+      >
         →
       </span>
     </Link>

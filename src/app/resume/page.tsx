@@ -1,6 +1,16 @@
 import type { Metadata } from "next";
 import { PrintLink } from "@/components/print-link";
-import { ArrowLink, COLUMNS, Highlights, Num, OutcomeLine, READING, SHELL, Section, TextLink } from "@/components/section";
+import {
+  ArrowLink,
+  COLUMNS,
+  Highlights,
+  Num,
+  OutcomeLine,
+  READING,
+  SHELL,
+  Section,
+  TextLink,
+} from "@/components/section";
 import {
   careerSummary,
   education,

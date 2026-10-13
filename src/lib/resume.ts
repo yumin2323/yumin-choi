@@ -58,8 +58,7 @@ export const profile = {
   role: "Frontend Developer",
   headline: "복잡한 데이터를\n빠르고 단단한 화면으로.",
   /** 히어로의 한 줄 소개. 자세한 설명은 about에서 */
-  intro:
-    "복잡한 데이터 화면을 설계하고 성능을 개선하는 프론트엔드 개발자 최유민입니다.",
+  intro: "복잡한 데이터 화면을 설계하고 성능을 개선하는 프론트엔드 개발자 최유민입니다.",
   /** 히어로의 지금 하는 일 한 줄 */
   now: {
     text: "지금은 스퀴즈비츠에서 Yetter를 만들고 있습니다",
@@ -68,9 +67,7 @@ export const profile = {
   /** 홈에 보이는 주요 기술. 전체 목록은 skills */
   coreStack: ["Next.js", "TypeScript", "TanStack Query", "Zustand"],
   email: "cym6749@gmail.com",
-  links: [
-    { label: "GitHub", href: "https://github.com/yumin2323" },
-  ] satisfies Link[],
+  links: [{ label: "GitHub", href: "https://github.com/yumin2323" }] satisfies Link[],
 };
 
 export const about = [
@@ -82,20 +79,12 @@ export const expertise: Expertise[] = [
   {
     title: "복잡한 UI 설계",
     text: "상태와 인터랙션이 얽힌 화면을 다루기 쉬운 구조로 나눕니다.",
-    items: [
-      "대규모 그래프",
-      "워크플로우 에디터",
-      "데이터 그리드",
-    ],
+    items: ["대규모 그래프", "워크플로우 에디터", "데이터 그리드"],
   },
   {
     title: "성능과 구조 개선",
     text: "느린 화면의 원인을 측정으로 찾고, 데이터가 흐르는 길을 정리합니다.",
-    items: [
-      "렌더링 병목 분석",
-      "상태 관리 구조 개선",
-      "실시간 이벤트 처리",
-    ],
+    items: ["렌더링 병목 분석", "상태 관리 구조 개선", "실시간 이벤트 처리"],
   },
   {
     title: "제품 운영까지 이어지는 개발",
@@ -135,15 +124,7 @@ export const works: Work[] = [
       caption: "모델 추가 비용이 비례하는 기준 전환",
     },
     impact: "Modular와 MAX 프레임워크 확장을 위한 MOU 체결",
-    stack: [
-      "Next.js",
-      "TypeScript",
-      "TanStack Query",
-      "Zustand",
-      "Tailwind CSS",
-      "Radix UI",
-      "Sentry",
-    ],
+    stack: ["Next.js", "TypeScript", "TanStack Query", "Zustand", "Tailwind CSS", "Radix UI", "Sentry"],
     highlights: [
       {
         title: "프론트엔드 1인 담당으로 처음부터 설계·구축",
@@ -156,9 +137,7 @@ export const works: Work[] = [
       {
         title: "OpenAPI 기반 모델 입력 화면 자동 생성",
         text: "모델별 입력 스키마를 해석해 폼과 중첩 데이터를 자동 구성",
-        details: [
-          "도입 후 5개월간 입력 타입과 위젯 추가 없이, 새로 들어온 모델은 스키마만으로 폼 생성",
-        ],
+        details: ["도입 후 5개월간 입력 타입과 위젯 추가 없이, 새로 들어온 모델은 스키마만으로 폼 생성"],
       },
     ],
     post: "json-schema-type-widget-mismatch",
@@ -232,12 +211,7 @@ export const works: Work[] = [
       after: "53KB",
       caption: "초기 폰트 다운로드 97% 축소",
     },
-    stack: [
-      "Next.js",
-      "FastAPI",
-      "MongoDB",
-      "GA4/GTM",
-    ],
+    stack: ["Next.js", "FastAPI", "MongoDB", "GA4/GTM"],
     highlights: [
       {
         title: "공식 웹사이트 풀스택 단독 구현",
@@ -271,8 +245,7 @@ export const sideProjects: Work[] = [
     category: "독서 기록 iOS 앱",
     status: "출시 준비 중",
     period: "2026",
-    motive:
-      "독후감 작성 부담 없이 책 등록만으로 독서 기록을 남기고, 필요한 순간에만 문장을 추가하는 iOS 앱",
+    motive: "독후감 작성 부담 없이 책 등록만으로 독서 기록을 남기고, 필요한 순간에만 문장을 추가하는 iOS 앱",
     media: {
       shape: "phone",
       items: [
@@ -289,14 +262,7 @@ export const sideProjects: Work[] = [
         },
       ],
     },
-    stack: [
-      "Expo",
-      "React Native",
-      "TypeScript",
-      "expo-sqlite",
-      "Supabase",
-      "Jest",
-    ],
+    stack: ["Expo", "React Native", "TypeScript", "expo-sqlite", "Supabase", "Jest"],
     highlights: [
       {
         title: "오프라인 우선 저장과 기기 간 동기화",
@@ -328,13 +294,7 @@ export const sideProjects: Work[] = [
         { image: "/works/crinkle-studio/finish.webp", caption: "완성 영상 미리보기와 MP4 내보내기" },
       ],
     },
-    stack: [
-      "Next.js",
-      "TypeScript",
-      "TanStack Query",
-      "Redux",
-      "Supabase",
-    ],
+    stack: ["Next.js", "TypeScript", "TanStack Query", "Redux", "Supabase"],
     highlights: [
       {
         title: "아이디어에서 MP4까지 5단계 제작 흐름",
@@ -364,34 +324,27 @@ export const timeline: TimelineItem[] = [
   {
     company: "스퀴즈비츠",
     period: "2022.10 – 현재",
-    summary:
-      "Owlite, FitsOnChips, Yetter, 공식 웹사이트의 프론트엔드를 맡고 있습니다.",
+    summary: "Owlite, FitsOnChips, Yetter, 공식 웹사이트의 프론트엔드를 맡고 있습니다.",
     current: true,
   },
   {
     company: "데이터메이커",
     period: "2022.05 – 2022.09",
-    summary:
-      "Vue로 데이터 라벨링 현황 대시보드와 교육용 튜토리얼 사이트를 만들었습니다.",
+    summary: "Vue로 데이터 라벨링 현황 대시보드와 교육용 튜토리얼 사이트를 만들었습니다.",
   },
   {
     company: "위피엔피",
     period: "2020.09 – 2022.01",
-    summary:
-      "인쇄물 자동 견적 시스템, 생산 관리 MES, Adobe CEP 플러그인을 React와 PHP로 개발했습니다.",
+    summary: "인쇄물 자동 견적 시스템, 생산 관리 MES, Adobe CEP 플러그인을 React와 PHP로 개발했습니다.",
   },
   {
     company: "메타빌드",
     period: "2017.02 – 2018.05",
-    summary:
-      "식약처·공정위 정부과제에서 기관 간 데이터 연계 시스템의 화면을 개발했습니다.",
+    summary: "식약처·공정위 정부과제에서 기관 간 데이터 연계 시스템의 화면을 개발했습니다.",
   },
 ];
 
-export const education = [
-  "건양대학교 융합IT학부(ICT전공) 졸업",
-  "정보처리기사 · SQLD · 리눅스마스터 2급",
-];
+export const education = ["건양대학교 융합IT학부(ICT전공) 졸업", "정보처리기사 · SQLD · 리눅스마스터 2급"];
 
 export const skills: SkillGroup[] = [
   {
@@ -401,13 +354,7 @@ export const skills: SkillGroup[] = [
   { title: "데이터 시각화", items: ["SVG", "dagre.js", "Nivo", "AG Grid"] },
   {
     title: "디자인 시스템",
-    items: [
-      "Tailwind CSS",
-      "Radix UI",
-      "Emotion",
-      "Storybook",
-      "Style Dictionary",
-    ],
+    items: ["Tailwind CSS", "Radix UI", "Emotion", "Storybook", "Style Dictionary"],
   },
   {
     title: "백엔드와 운영",

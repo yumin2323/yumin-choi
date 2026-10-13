@@ -1,0 +1,5 @@
+# MDX 본문과 마크다운 문서는 prettier가 문법·줄바꿈을 바꿀 수 있어 제외
+*.md
+*.mdx
+package-lock.json
+public

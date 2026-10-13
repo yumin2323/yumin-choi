@@ -93,7 +93,12 @@ function useDecodeWindow(playhead: number, budgetMB: number) {
   return { decoded: decoded.current, inflight: inflight.current };
 }
 
-function Strip({ playhead, shown, decoded, inflight }: {
+function Strip({
+  playhead,
+  shown,
+  decoded,
+  inflight,
+}: {
   playhead: number;
   shown: number;
   decoded: Set<number>;
@@ -125,7 +130,9 @@ function Stat({ label, value, warn = false }: { label: string; value: string; wa
   return (
     <div className="rounded-lg border border-line bg-soft px-3 py-2">
       <div className="text-[11.5px] text-muted">{label}</div>
-      <div className={`text-[15px] font-semibold tabular-nums ${warn ? "text-[var(--gold)]" : "text-heading"}`}>{value}</div>
+      <div className={`text-[15px] font-semibold tabular-nums ${warn ? "text-[var(--gold)]" : "text-heading"}`}>
+        {value}
+      </div>
     </div>
   );
 }
@@ -166,7 +173,11 @@ function useFling(setPlayhead: (n: number) => void) {
   };
 }
 
-function Controls({ playhead, setPlayhead, fling }: {
+function Controls({
+  playhead,
+  setPlayhead,
+  fling,
+}: {
   playhead: number;
   setPlayhead: (n: number) => void;
   fling: (from: number) => void;
