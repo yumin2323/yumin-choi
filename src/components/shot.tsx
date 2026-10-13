@@ -7,6 +7,8 @@ import type { Media, MediaSet } from "@/lib/resume";
 export function Shot({ item, name, shape }: { item: Media; name: string; shape: MediaSet["shape"] }) {
   const dialog = useRef<HTMLDialogElement>(null);
   const small = useRef<HTMLVideoElement>(null);
+  const big = useRef<HTMLVideoElement>(null);
+  const startAt = useRef(0);
   const [zoomed, setZoomed] = useState(false);
   const [frame, setFrame] = useState(item.image);
   const label = `${name} ${item.caption} 화면`;
@@ -23,6 +25,7 @@ export function Shot({ item, name, shape }: { item: Media; name: string; shape: 
       canvas.height = video.videoHeight;
       canvas.getContext("2d")?.drawImage(video, 0, 0);
       setFrame(canvas.toDataURL());
+      startAt.current = video.currentTime;
     }
     setZoomed(true);
     dialog.current?.showModal();
@@ -68,6 +71,8 @@ export function Shot({ item, name, shape }: { item: Media; name: string; shape: 
         aria-label={label}
         onClick={() => dialog.current?.close()}
         onClose={() => {
+          // 닫을 때도 큰 영상이 보여 주던 지점에서 이어 간다
+          if (small.current && big.current) small.current.currentTime = big.current.currentTime;
           setZoomed(false);
           document.documentElement.style.overflow = "";
         }}
@@ -79,15 +84,16 @@ export function Shot({ item, name, shape }: { item: Media; name: string; shape: 
             <div className="relative max-w-full border border-line">
               <img src={frame} alt="" className={large} />
               <video
+                ref={big}
                 src={item.video}
                 aria-hidden="true"
                 autoPlay
                 loop
                 muted
                 playsInline
-                // 작은 영상이 재생하던 지점에서 이어서 보여 준다
+                // 밑에 깔아 둔 장면, 곧 누른 순간의 지점에서 이어서 보여 준다
                 onLoadedMetadata={(event) => {
-                  event.currentTarget.currentTime = small.current?.currentTime ?? 0;
+                  event.currentTarget.currentTime = startAt.current;
                 }}
                 className="absolute inset-0 h-full w-full"
               />
