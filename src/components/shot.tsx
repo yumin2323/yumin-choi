@@ -77,12 +77,7 @@ export function Shot({ item, name, shape }: { item: Media; name: string; shape: 
           ) : (
             <img src={item.image} alt={label} className={large} />
           ))}
-        <p className="mt-4 flex items-baseline gap-4 text-sm">
-          <span className="text-muted">{item.caption}</span>
-          <button type="button" className="cursor-pointer text-heading">
-            <span className="link-underline">닫기</span>
-          </button>
-        </p>
+        <p className="mt-4 text-sm text-muted">{item.caption}</p>
       </dialog>
     </figure>
   );
