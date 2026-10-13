@@ -177,10 +177,7 @@ function Run({ optimized }: { optimized: boolean }) {
     for (const ev of events) {
       // 이벤트마다 별도 태스크로 도착시킨다. 한 태스크에 몰면 React 가
       // 알아서 묶어 버려서 "이벤트당 반영"을 재현할 수 없다.
-      const id = window.setTimeout(
-        () => (optimized ? enqueue(bumpCounters(ev)) : applyNow(bumpCounters(ev))),
-        ev.at,
-      );
+      const id = window.setTimeout(() => (optimized ? enqueue(bumpCounters(ev)) : applyNow(bumpCounters(ev))), ev.at);
       timers.push(id);
     }
 

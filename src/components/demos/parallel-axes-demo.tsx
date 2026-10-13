@@ -161,7 +161,9 @@ export function ParallelAxesDemo() {
 
   return (
     <figure className="my-10 border-y border-line py-5">
-      <figcaption className="text-[15px] font-semibold text-heading">지표마다 log·reverse를 따로 켜는 평행좌표 차트</figcaption>
+      <figcaption className="text-[15px] font-semibold text-heading">
+        지표마다 log·reverse를 따로 켜는 평행좌표 차트
+      </figcaption>
 
       <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2">
         {METRICS.map((m) => (

@@ -196,7 +196,7 @@ export function CellRangeDemo() {
     const cut = !rows.multiple || !cols.multiple;
     setMessage(
       `붙여넣기: 복사 ${source.h}×${source.w} → 선택 ${target.h}×${target.w}. ` +
-        (cut ? "배수가 아니라 작은 쪽 크기만 붙임" : repeated ? "배수라서 반복해 채움" : "그대로 붙임")
+        (cut ? "배수가 아니라 작은 쪽 크기만 붙임" : repeated ? "배수라서 반복해 채움" : "그대로 붙임"),
     );
   };
 
@@ -276,7 +276,8 @@ export function CellRangeDemo() {
       const s = sizeOf(copied.rect);
       const rows = pasteSpan(h, s.h);
       const cols = pasteSpan(w, s.w);
-      const rule = !rows.multiple || !cols.multiple ? "작은 쪽 크기만" : h > s.h || w > s.w ? "반복해서 채움" : "그대로";
+      const rule =
+        !rows.multiple || !cols.multiple ? "작은 쪽 크기만" : h > s.h || w > s.w ? "반복해서 채움" : "그대로";
       text += ` · 복사 ${s.h}×${s.w} → 붙여넣으면 ${rule}`;
     }
     return text;
@@ -349,8 +350,7 @@ export function CellRangeDemo() {
                 const isSelected = selected.has(k);
                 const inCopy =
                   copied && r >= copied.rect.r0 && r <= copied.rect.r1 && c >= copied.rect.c0 && c <= copied.rect.c1;
-                const showHandle =
-                  contiguous && bounds && r === bounds.r1 && c === bounds.c1 && !fillPreview;
+                const showHandle = contiguous && bounds && r === bounds.r1 && c === bounds.c1 && !fillPreview;
                 return (
                   <div
                     key={k}
@@ -363,9 +363,7 @@ export function CellRangeDemo() {
                       "relative h-9 border-l border-t border-line px-2.5 py-1.5 tabular-nums text-heading " +
                       (isSelected ? "bg-accent-soft" : "") +
                       (fillCells.has(k) ? " outline-2 -outline-offset-2 outline-dashed outline-accent" : "") +
-                      (inCopy && !fillCells.has(k)
-                        ? " outline-1 -outline-offset-4 outline-dashed outline-muted"
-                        : "")
+                      (inCopy && !fillCells.has(k) ? " outline-1 -outline-offset-4 outline-dashed outline-muted" : "")
                     }
                     style={{ boxShadow: isSelected ? borderOf(r, c) : undefined }}
                   >

@@ -184,7 +184,9 @@ function Field({
           onChange={(e) => onChange(Number(e.target.value))}
           className="h-1 flex-1 cursor-pointer accent-[var(--color-accent,currentColor)]"
         />
-        <span className="w-7 text-right text-[13px] font-semibold text-heading tabular-nums">{String(value ?? min)}</span>
+        <span className="w-7 text-right text-[13px] font-semibold text-heading tabular-nums">
+          {String(value ?? min)}
+        </span>
       </div>
     );
   } else if (uiType === "image_url" || uiType === "image_url_array") {
@@ -228,8 +230,7 @@ function Field({
         aria-checked={Boolean(value)}
         onClick={() => onChange(!value)}
         className={
-          "flex h-5 w-9 items-center rounded-full p-0.5 transition-colors " +
-          (value ? "bg-accent" : "bg-line")
+          "flex h-5 w-9 items-center rounded-full p-0.5 transition-colors " + (value ? "bg-accent" : "bg-line")
         }
       >
         <span
@@ -249,9 +250,7 @@ function Field({
       />
     );
   } else {
-    control = (
-      <input value={String(value ?? "")} onChange={(e) => onChange(e.target.value)} className={fieldBox} />
-    );
+    control = <input value={String(value ?? "")} onChange={(e) => onChange(e.target.value)} className={fieldBox} />;
   }
 
   return (
@@ -285,7 +284,12 @@ function highlightJson(text: string) {
         {str ?? token}
       </span>,
     );
-    if (colon) out.push(<span key={`${m.index}:`} style={{ color: "var(--shiki-token-punctuation)" }}>{colon}</span>);
+    if (colon)
+      out.push(
+        <span key={`${m.index}:`} style={{ color: "var(--shiki-token-punctuation)" }}>
+          {colon}
+        </span>,
+      );
     last = m.index + token.length;
   }
   out.push(text.slice(last));
@@ -350,9 +354,7 @@ export function SchemaFormDemo() {
   return (
     <figure className="my-10 border-y border-line py-5">
       <div>
-        <figcaption className="text-[15px] font-semibold text-heading">
-          스키마를 고치면 폼이 따라 바뀐다
-        </figcaption>
+        <figcaption className="text-[15px] font-semibold text-heading">스키마를 고치면 폼이 따라 바뀐다</figcaption>
         <p className="mt-2 text-sm leading-[1.75] text-sub">
           왼쪽 스키마의 <code className="font-mono text-[12.5px] text-accent">x-ui-type</code>을 바꾸면 오른쪽 위젯이
           바뀐다. 프론트엔드 코드는 그대로다.

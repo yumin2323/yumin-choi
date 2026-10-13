@@ -18,11 +18,53 @@ type OpEdge = { id: number; source: number; target: number; shape: string };
 
 const NODES: OpNode[] = [
   { id: 0, name: "input", op: "Input", row: 0, col: 1, attrs: [["dtype", "float32"]] },
-  { id: 1, name: "conv1", op: "Conv", row: 1, col: 1, attrs: [["kernel", "3×3"], ["stride", "1"], ["pads", "1"]] },
-  { id: 2, name: "bn1", op: "BatchNorm", row: 2, col: 0, attrs: [["epsilon", "1e-5"], ["momentum", "0.9"]] },
-  { id: 3, name: "conv_skip", op: "Conv", row: 2, col: 2, attrs: [["kernel", "1×1"], ["stride", "1"]] },
+  {
+    id: 1,
+    name: "conv1",
+    op: "Conv",
+    row: 1,
+    col: 1,
+    attrs: [
+      ["kernel", "3×3"],
+      ["stride", "1"],
+      ["pads", "1"],
+    ],
+  },
+  {
+    id: 2,
+    name: "bn1",
+    op: "BatchNorm",
+    row: 2,
+    col: 0,
+    attrs: [
+      ["epsilon", "1e-5"],
+      ["momentum", "0.9"],
+    ],
+  },
+  {
+    id: 3,
+    name: "conv_skip",
+    op: "Conv",
+    row: 2,
+    col: 2,
+    attrs: [
+      ["kernel", "1×1"],
+      ["stride", "1"],
+    ],
+  },
   { id: 4, name: "relu1", op: "Relu", row: 3, col: 0, attrs: [] },
-  { id: 5, name: "conv2", op: "Conv", row: 4, col: 0, attrs: [["kernel", "3×3"], ["stride", "1"], ["pads", "1"]] },
+  {
+    id: 5,
+    name: "conv2",
+    op: "Conv",
+    row: 4,
+    col: 0,
+    attrs: [
+      ["kernel", "3×3"],
+      ["stride", "1"],
+      ["pads", "1"],
+    ],
+  },
   { id: 6, name: "add", op: "Add", row: 5, col: 1, attrs: [] },
   { id: 7, name: "relu2", op: "Relu", row: 6, col: 1, attrs: [] },
   { id: 8, name: "output", op: "Output", row: 7, col: 1, attrs: [] },
@@ -128,10 +170,7 @@ function NodeView({ node, isSelected, onSelect, onRendered }: NodeProps) {
       }
     >
       <span
-        className={
-          "h-full w-1.5 shrink-0 rounded-l-[5px] " +
-          (isConv ? "bg-accent" : isIO ? "bg-muted" : "bg-line")
-        }
+        className={"h-full w-1.5 shrink-0 rounded-l-[5px] " + (isConv ? "bg-accent" : isIO ? "bg-muted" : "bg-line")}
       />
       <span className="min-w-0 flex-1 truncate text-[11.5px] font-semibold text-heading">{node.op}</span>
       <span ref={countEl} className="text-[10.5px] font-semibold text-sub tabular-nums">
@@ -245,13 +284,7 @@ function EdgeViewWide({
   selectedData: OpNode[];
   onRendered: RenderedHandler;
 }) {
-  return (
-    <EdgeView
-      edge={edge}
-      isSelected={selectedData.some((d) => d.id === edge.target)}
-      onRendered={onRendered}
-    />
-  );
+  return <EdgeView edge={edge} isSelected={selectedData.some((d) => d.id === edge.target)} onRendered={onRendered} />;
 }
 
 /* ---------- 속성 패널 ---------- */
@@ -276,10 +309,18 @@ function PropertyPanel({ node, onClose }: { node: OpNode; onClose: () => void })
         </button>
       </div>
       <Section title="Inputs">
-        {inputs.length === 0 ? <Empty /> : inputs.map((e) => <Row key={e.id} k={NODE_BY_ID.get(e.source)!.name} v={e.shape} />)}
+        {inputs.length === 0 ? (
+          <Empty />
+        ) : (
+          inputs.map((e) => <Row key={e.id} k={NODE_BY_ID.get(e.source)!.name} v={e.shape} />)
+        )}
       </Section>
       <Section title="Outputs">
-        {outputs.length === 0 ? <Empty /> : outputs.map((e) => <Row key={e.id} k={NODE_BY_ID.get(e.target)!.name} v={e.shape} />)}
+        {outputs.length === 0 ? (
+          <Empty />
+        ) : (
+          outputs.map((e) => <Row key={e.id} k={NODE_BY_ID.get(e.target)!.name} v={e.shape} />)
+        )}
       </Section>
       <Section title="Attributes">
         {node.attrs.length === 0 ? <Empty /> : node.attrs.map(([k, v]) => <Row key={k} k={k} v={v} />)}
@@ -353,10 +394,26 @@ function MiniEditor({ optimized }: { optimized: boolean }) {
             aria-hidden="true"
           >
             <defs>
-              <marker id="mini-editor-arrow" markerWidth="8" markerHeight="8" viewBox="-4 -4 8 8" orient="auto-start-reverse" refX="0" refY="0">
+              <marker
+                id="mini-editor-arrow"
+                markerWidth="8"
+                markerHeight="8"
+                viewBox="-4 -4 8 8"
+                orient="auto-start-reverse"
+                refX="0"
+                refY="0"
+              >
                 <polyline points="-3,-2.5 0,0 -3,2.5" fill="none" strokeWidth="1" className="stroke-muted" />
               </marker>
-              <marker id="mini-editor-arrow-selected" markerWidth="8" markerHeight="8" viewBox="-4 -4 8 8" orient="auto-start-reverse" refX="0" refY="0">
+              <marker
+                id="mini-editor-arrow-selected"
+                markerWidth="8"
+                markerHeight="8"
+                viewBox="-4 -4 8 8"
+                orient="auto-start-reverse"
+                refX="0"
+                refY="0"
+              >
                 <polyline points="-3,-2.5 0,0 -3,2.5" fill="none" strokeWidth="1.4" className="stroke-accent" />
               </marker>
             </defs>

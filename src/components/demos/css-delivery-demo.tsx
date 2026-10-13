@@ -37,8 +37,7 @@ const appUtilities = (n: number, extra = "") => `@layer cdd${n}-utilities {
 
 const PADDING = `.cdd-p-4 { padding: 14px 16px; }`;
 const SHADOW = `.cdd-shadow-8 { box-shadow: 0 8px 22px rgb(0 0 0 / 0.16); }`;
-const scope = (rules: string, root: string) =>
-  rules.replace(/^\./gm, `${root} .`);
+const scope = (rules: string, root: string) => rules.replace(/^\./gm, `${root} .`);
 const both = (rules: string) => `${scope(rules, ".cdd-a")}\n${scope(rules, ".cdd-b")}`;
 
 // 리셋 앱의 전역 리셋 (create-next-app 템플릿처럼 레이어 밖)
@@ -212,11 +211,7 @@ export function CssDeliveryDemo() {
         <figcaption id={groupId} className="text-[15px] font-semibold text-heading">
           CSS를 어떻게 배포하느냐에 따라 달라지는 화면
         </figcaption>
-        <div
-          role="radiogroup"
-          aria-labelledby={groupId}
-          className="flex flex-wrap gap-x-4 gap-y-1.5 text-sm"
-        >
+        <div role="radiogroup" aria-labelledby={groupId} className="flex flex-wrap gap-x-4 gap-y-1.5 text-sm">
           {STAGES.map((s, i) => (
             <button
               key={s.label}
@@ -226,9 +221,7 @@ export function CssDeliveryDemo() {
               onClick={() => setIndex(i)}
               className={
                 "cursor-pointer underline-offset-4 transition-colors " +
-                (index === i
-                  ? "font-semibold text-accent underline decoration-gold"
-                  : "text-sub hover:text-heading")
+                (index === i ? "font-semibold text-accent underline decoration-gold" : "text-sub hover:text-heading")
               }
             >
               {i + 1}. {s.label}
@@ -241,10 +234,7 @@ export function CssDeliveryDemo() {
 
       <div className="mt-5 grid gap-3">
         <div className="grid gap-3 sm:grid-cols-2">
-          <Scene
-            title="리셋 앱 (Tailwind 없음)"
-            results={stage.resetApp ? [stage.resetApp] : []}
-          >
+          <Scene title="리셋 앱 (Tailwind 없음)" results={stage.resetApp ? [stage.resetApp] : []}>
             {stage.resetApp ? (
               <div className="cdd-a">
                 <PackageCard prefixed={stage.prefixed} />

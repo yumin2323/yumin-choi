@@ -30,7 +30,10 @@ const components: MDXComponents = {
   ),
   // 블록 코드(pre 안)는 pre 스타일을 따르고, 문장 속 코드만 배경을 둔다. 블록 코드의 색과 줄 강조는 globals.css의 [data-line] 규칙
   code: (props) => (
-    <code className="rounded bg-soft px-1.5 py-0.5 font-mono text-[0.9em] text-heading [pre_&]:bg-transparent [pre_&]:p-0" {...props} />
+    <code
+      className="rounded bg-soft px-1.5 py-0.5 font-mono text-[0.9em] text-heading [pre_&]:bg-transparent [pre_&]:p-0"
+      {...props}
+    />
   ),
   table: (props) => (
     <div className="my-6 overflow-x-auto">
