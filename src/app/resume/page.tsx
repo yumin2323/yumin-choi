@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { PrintLink } from "@/components/print-link";
+import { Shot } from "@/components/shot";
 import {
   ArrowLink,
   COLUMNS,
@@ -20,8 +21,6 @@ import {
   skills,
   timeline,
   works,
-  type Media,
-  type MediaSet,
   type Work,
 } from "@/lib/resume";
 
@@ -161,39 +160,6 @@ function WorkItem({ work, n }: { work: Work; n: number }) {
         )}
       </article>
     </li>
-  );
-}
-
-/** 화면 캡처 한 장. 영상은 GIF처럼 소리 없이 반복 재생하고, 인쇄할 때는 정지 화면으로 바꾼다 */
-function Shot({ item, name, shape }: { item: Media; name: string; shape: MediaSet["shape"] }) {
-  const label = `${name} ${item.caption} 화면`;
-  const [width, height] = shape === "phone" ? [600, 1305] : [1200, 750];
-  const className = `w-full border border-line ${shape === "phone" ? "aspect-[600/1305]" : "aspect-[16/10]"}`;
-  return (
-    <figure className="break-inside-avoid">
-      {item.video && (
-        <video
-          src={item.video}
-          poster={item.image}
-          aria-label={label}
-          autoPlay
-          loop
-          muted
-          playsInline
-          preload="metadata"
-          className={`block print:hidden ${className}`}
-        />
-      )}
-      <img
-        src={item.image}
-        alt={label}
-        width={width}
-        height={height}
-        loading={item.video ? "eager" : "lazy"}
-        className={`${item.video ? "hidden print:block" : "block"} ${className}`}
-      />
-      <figcaption className="mt-2 text-[13px] leading-[1.6] text-muted">{item.caption}</figcaption>
-    </figure>
   );
 }
 
