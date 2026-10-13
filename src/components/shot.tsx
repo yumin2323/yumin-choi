@@ -6,13 +6,24 @@ import type { Media, MediaSet } from "@/lib/resume";
 /** 화면 캡처 한 장. 영상은 GIF처럼 소리 없이 반복 재생하고, 인쇄할 때는 정지 화면으로 바꾼다. 누르면 크게 본다 */
 export function Shot({ item, name, shape }: { item: Media; name: string; shape: MediaSet["shape"] }) {
   const dialog = useRef<HTMLDialogElement>(null);
+  const small = useRef<HTMLVideoElement>(null);
   const [zoomed, setZoomed] = useState(false);
+  const [frame, setFrame] = useState(item.image);
   const label = `${name} ${item.caption} 화면`;
   const [width, height] = shape === "phone" ? [600, 1305] : [1200, 750];
   const className = `w-full border border-line ${shape === "phone" ? "aspect-[600/1305]" : "aspect-[16/10]"}`;
-  const large = "block max-h-[calc(100dvh-7rem)] max-w-full border border-line object-contain";
+  const large = "block max-h-[calc(100dvh-7rem)] max-w-full object-contain";
 
   const open = () => {
+    // 큰 영상이 준비될 때까지 깜빡이지 않도록, 누른 순간의 장면을 그려 밑에 깔아 둔다
+    const video = small.current;
+    if (video && video.readyState >= 2) {
+      const canvas = document.createElement("canvas");
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      canvas.getContext("2d")?.drawImage(video, 0, 0);
+      setFrame(canvas.toDataURL());
+    }
     setZoomed(true);
     dialog.current?.showModal();
     document.documentElement.style.overflow = "hidden";
@@ -28,6 +39,7 @@ export function Shot({ item, name, shape }: { item: Media; name: string; shape: 
       >
         {item.video && (
           <video
+            ref={small}
             src={item.video}
             poster={item.image}
             aria-hidden="true"
@@ -64,18 +76,24 @@ export function Shot({ item, name, shape }: { item: Media; name: string; shape: 
         {/* 닫혀 있을 때 큰 영상을 따로 받지 않도록 열렸을 때만 그린다 */}
         {zoomed &&
           (item.video ? (
-            <video
-              src={item.video}
-              poster={item.image}
-              aria-hidden="true"
-              autoPlay
-              loop
-              muted
-              playsInline
-              className={large}
-            />
+            <div className="relative max-w-full border border-line">
+              <img src={frame} alt="" className={large} />
+              <video
+                src={item.video}
+                aria-hidden="true"
+                autoPlay
+                loop
+                muted
+                playsInline
+                // 작은 영상이 재생하던 지점에서 이어서 보여 준다
+                onLoadedMetadata={(event) => {
+                  event.currentTarget.currentTime = small.current?.currentTime ?? 0;
+                }}
+                className="absolute inset-0 h-full w-full"
+              />
+            </div>
           ) : (
-            <img src={item.image} alt={label} className={large} />
+            <img src={item.image} alt={label} className={`${large} border border-line`} />
           ))}
         <p className="mt-4 text-sm text-muted">{item.caption}</p>
       </dialog>
