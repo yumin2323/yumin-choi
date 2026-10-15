@@ -245,6 +245,7 @@ export const sideProjects: Work[] = [
     category: "독서 기록 iOS 앱",
     status: "출시 준비 중",
     period: "2026",
+    url: "https://marglet.from-here.dev",
     motive: "독후감 작성 부담 없이 책 등록만으로 독서 기록을 남기고, 필요한 순간에만 문장을 추가하는 iOS 앱",
     media: {
       shape: "phone",
