@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { IBM_Plex_Sans_KR } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { ThemeProvider } from "@/components/theme-provider";
@@ -28,6 +29,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <main className="flex-1">{children}</main>
           <SiteFooter />
         </ThemeProvider>
+        {/* 쿠키 없이 방문자 수와 유입 경로만 집계하는 Vercel Analytics. 프로덕션 배포에서만 수집함 */}
+        <Analytics />
       </body>
     </html>
   );
