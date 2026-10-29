@@ -11,7 +11,8 @@ export function SiteNav() {
   return (
     <nav aria-label="주 메뉴" className="flex">
       {nav.map(({ href, label }) => {
-        const current = href === "/" ? pathname === "/" : pathname.startsWith(href);
+        // /blog는 /blog와 /blog/<slug>에서만 현재 메뉴. /blogroll처럼 앞부분만 같은 주소는 제외
+        const current = href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(`${href}/`);
         return (
           <Link
             key={href}
