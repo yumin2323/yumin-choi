@@ -337,7 +337,7 @@ function PropertyPanel({ node, onClose }: { node: OpNode; onClose: () => void })
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div>
-      <div className="mb-1 text-[10.5px] font-semibold tracking-[0.04em] text-muted uppercase">{title}</div>
+      <div className="mb-1 text-[11px] font-semibold text-muted">{title}</div>
       <div className="flex flex-col gap-0.5">{children}</div>
     </div>
   );

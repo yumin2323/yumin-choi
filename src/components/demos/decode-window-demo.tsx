@@ -108,17 +108,11 @@ function Strip({
     <div className="flex h-10 w-full gap-px overflow-hidden rounded-md" aria-hidden="true">
       {Array.from({ length: COUNT }, (_, i) => {
         const cls =
-          i === shown
-            ? "bg-accent"
-            : decoded.has(i)
-              ? "bg-accent/45"
-              : inflight.has(i)
-                ? "bg-[var(--gold)]"
-                : "bg-line";
+          i === shown ? "bg-accent" : decoded.has(i) ? "bg-accent/45" : inflight.has(i) ? "bg-heading" : "bg-line";
         return (
           <span
             key={i}
-            className={`min-w-0 flex-1 ${cls} ${i === playhead && i !== shown ? "outline outline-2 outline-[var(--gold)]" : ""}`}
+            className={`min-w-0 flex-1 ${cls} ${i === playhead && i !== shown ? "outline outline-2 outline-gold" : ""}`}
           />
         );
       })}
@@ -130,9 +124,7 @@ function Stat({ label, value, warn = false }: { label: string; value: string; wa
   return (
     <div className="rounded-lg border border-line bg-soft px-3 py-2">
       <div className="text-[11.5px] text-muted">{label}</div>
-      <div className={`text-[15px] font-semibold tabular-nums ${warn ? "text-[var(--gold)]" : "text-heading"}`}>
-        {value}
-      </div>
+      <div className={`text-[15px] font-semibold tabular-nums ${warn ? "text-gold" : "text-heading"}`}>{value}</div>
     </div>
   );
 }
@@ -141,7 +133,7 @@ function Legend() {
   const items = [
     ["bg-accent", "화면에 그린 프레임"],
     ["bg-accent/45", "디코딩해 둔 프레임"],
-    ["bg-[var(--gold)]", "디코딩 중"],
+    ["bg-heading", "디코딩 중"],
     ["bg-line", "압축 상태로만 보관"],
   ];
   return (
