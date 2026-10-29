@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Media, MediaSet } from "@/lib/resume";
 
 /** 화면 캡처 한 장. 영상은 GIF처럼 소리 없이 반복 재생하고, 인쇄할 때는 정지 화면으로 바꾼다. 누르면 크게 본다 */
@@ -26,11 +26,24 @@ export function Shot({ item, name, shape }: { item: Media; name: string; shape: 
       canvas.getContext("2d")?.drawImage(video, 0, 0);
       setFrame(canvas.toDataURL());
       startAt.current = video.currentTime;
+    } else {
+      // 장면을 뜰 수 없으면 지난번에 연 장면 대신 정지 화면을 깔고, 작은 영상의 지금 위치에서 시작한다
+      setFrame(item.image);
+      startAt.current = video?.currentTime ?? 0;
     }
     setZoomed(true);
     dialog.current?.showModal();
-    document.documentElement.style.overflow = "hidden";
   };
+
+  // 크게 보는 동안 뒤 페이지가 스크롤되지 않게 한다. 열린 채로 다른 페이지로 이동해 언마운트돼도 풀린다
+  useEffect(() => {
+    if (!zoomed) return;
+    const root = document.documentElement;
+    root.style.overflow = "hidden";
+    return () => {
+      root.style.overflow = "";
+    };
+  }, [zoomed]);
 
   return (
     <figure className="break-inside-avoid">
@@ -74,7 +87,6 @@ export function Shot({ item, name, shape }: { item: Media; name: string; shape: 
           // 닫을 때도 큰 영상이 보여 주던 지점에서 이어 간다
           if (small.current && big.current) small.current.currentTime = big.current.currentTime;
           setZoomed(false);
-          document.documentElement.style.overflow = "";
         }}
         className="m-0 h-dvh max-h-none w-dvw max-w-none cursor-zoom-out bg-background p-4 text-body backdrop:bg-transparent open:flex open:flex-col open:items-center open:justify-center sm:p-8 print:hidden"
       >
