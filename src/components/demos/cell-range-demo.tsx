@@ -312,6 +312,7 @@ export function CellRangeDemo() {
         </span>
       </p>
 
+      {/* 표 위의 터치는 스크롤이 아니라 선택이라(touch-none) 가로 스크롤에 기대지 않는다. 최소 폭(약 294px)을 낮춰 휴대폰 본문 폭 안에 들어오게 한다 */}
       <div className="mt-5 overflow-x-auto">
         <div
           ref={gridRef}
@@ -324,8 +325,8 @@ export function CellRangeDemo() {
           onPointerMove={onPointerMove}
           onPointerUp={onPointerUp}
           onPointerCancel={onPointerUp}
-          className="grid min-w-[380px] touch-none select-none rounded-lg border border-line text-[13px] outline-none focus-visible:ring-2 focus-visible:ring-accent"
-          style={{ gridTemplateColumns: `36px repeat(${COLUMNS.length}, minmax(72px, 1fr))` }}
+          className="grid touch-none select-none rounded-lg border border-line text-[13px] outline-none focus-visible:ring-2 focus-visible:ring-accent"
+          style={{ gridTemplateColumns: `36px repeat(${COLUMNS.length}, minmax(64px, 1fr))` }}
         >
           <div role="row" className="contents">
             <div className="border-b border-line bg-soft" />
@@ -333,7 +334,7 @@ export function CellRangeDemo() {
               <div
                 key={name}
                 role="columnheader"
-                className="border-b border-l border-line bg-soft px-2.5 py-1.5 font-semibold text-sub"
+                className="border-b border-l border-line bg-soft px-2 py-1.5 font-semibold whitespace-nowrap text-sub sm:px-2.5"
               >
                 {name}
               </div>
@@ -360,7 +361,7 @@ export function CellRangeDemo() {
                     data-r={r}
                     data-c={c}
                     className={
-                      "relative h-9 border-l border-t border-line px-2.5 py-1.5 tabular-nums text-heading " +
+                      "relative h-9 border-l border-t border-line px-2 py-1.5 tabular-nums text-heading sm:px-2.5 " +
                       (isSelected ? "bg-accent-soft" : "") +
                       (fillCells.has(k) ? " outline-2 -outline-offset-2 outline-dashed outline-accent" : "") +
                       (inCopy && !fillCells.has(k) ? " outline-1 -outline-offset-4 outline-dashed outline-muted" : "")
