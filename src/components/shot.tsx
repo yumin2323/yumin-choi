@@ -67,12 +67,14 @@ export function Shot({ item, name, shape }: { item: Media; name: string; shape: 
             className={`block print:hidden ${className}`}
           />
         )}
+        {/* lazy로 두면 스크롤하지 않은 채 PDF로 저장할 때 아직 받지 않은 빈 칸으로 찍히므로 바로 받는다.
+            페이지 아래쪽이라 위 내용보다 늦게 받도록 우선순위만 낮춘다 */}
         <img
           src={item.image}
           alt={label}
           width={width}
           height={height}
-          loading={item.video ? "eager" : "lazy"}
+          fetchPriority="low"
           className={`${item.video ? "hidden print:block" : "block"} ${className}`}
         />
       </button>

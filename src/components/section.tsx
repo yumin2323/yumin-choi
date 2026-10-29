@@ -11,11 +11,22 @@ export const READING = "max-w-[680px]";
 /** 모든 구역이 공유하는 2단 격자. 왼쪽은 구역 이름, 오른쪽은 본문 */
 export const COLUMNS = "md:grid md:grid-cols-[140px_minmax(0,1fr)] md:gap-10";
 
-/** 한 구역. 위쪽 얇은 구분선으로 앞 구역과 나눈다 */
+/**
+ * 한 구역. 위쪽 얇은 구분선으로 앞 구역과 나눈다.
+ * 인쇄할 때 마지막 구역은 아래 여백을 없앤다. 여백만 다음 쪽으로 넘어가 빈 쪽이 생기는 것을 막는다(Safari).
+ * 인쇄 폭에서는 구역 이름이 내용 위에 놓이므로, 이름만 쪽 끝에 남지 않게 이름 바로 뒤에서는 쪽을 나누지 않는다
+ */
 export function Section({ id, title, children }: { id: string; title: string; children: ReactNode }) {
   return (
-    <section id={id} aria-labelledby={`${id}-title`} className={`border-t border-line py-14 sm:py-20 ${COLUMNS}`}>
-      <h2 id={`${id}-title`} className="mb-8 text-[15px] leading-[1.9] font-semibold text-heading md:mb-0">
+    <section
+      id={id}
+      aria-labelledby={`${id}-title`}
+      className={`border-t border-line py-14 sm:py-20 print:last:pb-0 ${COLUMNS}`}
+    >
+      <h2
+        id={`${id}-title`}
+        className="mb-8 text-[15px] leading-[1.9] font-semibold text-heading md:mb-0 print:break-after-avoid"
+      >
         {title}
       </h2>
       <div>{children}</div>
