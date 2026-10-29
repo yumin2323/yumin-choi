@@ -22,8 +22,9 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    // next-themes가 하이드레이션 전에 <html>에 data-theme을 넣으므로 서버 HTML과 달라도 경고하지 않음
-    <html lang="ko" className={plex.variable} suppressHydrationWarning>
+    // next-themes가 하이드레이션 전에 <html>에 data-theme을 넣으므로 서버 HTML과 달라도 경고하지 않음.
+    // data-scroll-behavior: 페이지 안 앵커 이동은 부드럽게 두고, 페이지 사이를 이동할 때는 Next가 맨 위로 바로 올린다
+    <html lang="ko" className={plex.variable} data-scroll-behavior="smooth" suppressHydrationWarning>
       <body className="flex min-h-dvh flex-col bg-background px-5 font-sans text-base/[1.6] text-body antialiased break-keep wrap-break-word">
         <ThemeProvider attribute="data-theme" defaultTheme="system" enableSystem disableTransitionOnChange>
           <SiteHeader />
