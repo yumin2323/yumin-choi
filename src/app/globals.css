@@ -56,52 +56,55 @@
   --code-highlight: #d6e3ef;
 }
 
-:root[data-theme="dark"] {
-  color-scheme: dark;
-  --background: #0e1721;
-  --surface: #162230;
-  --soft: #1d2b3a;
-  --line: #2b3a49;
-  --heading: #f3f6f9;
-  --body: #d3dbe3;
-  --sub: #a8b4c1;
-  --muted: #8593a2;
-  --accent: #7fa2c1;
-  --accent-hover: #96b4cf;
-  --accent-soft: #223a4f;
-  --gold: #d0ae72;
-  --focus: #7fa2c1;
-  --green: #6fbf9a;
+/* 다크 색은 화면에서만. PDF로 저장하면 배경이 빠진 흰 종이에 찍히므로 인쇄는 테마와 상관없이 라이트 색을 쓴다 */
+@media screen {
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --background: #0e1721;
+    --surface: #162230;
+    --soft: #1d2b3a;
+    --line: #2b3a49;
+    --heading: #f3f6f9;
+    --body: #d3dbe3;
+    --sub: #a8b4c1;
+    --muted: #8593a2;
+    --accent: #7fa2c1;
+    --accent-hover: #96b4cf;
+    --accent-soft: #223a4f;
+    --gold: #d0ae72;
+    --focus: #7fa2c1;
+    --green: #6fbf9a;
 
-  /* 다크에서는 칸이 배경보다 밝게 떠 보이고, 선이 묻히지 않도록 명도를 올림 */
-  --thumb-bg: #18232f;
-  --thumb-surface: #223142;
-  --thumb-line: #3b4d60;
-  --thumb-muted: #6c7f93;
-  --thumb-accent-soft: #2a4560;
+    /* 다크에서는 칸이 배경보다 밝게 떠 보이고, 선이 묻히지 않도록 명도를 올림 */
+    --thumb-bg: #18232f;
+    --thumb-surface: #223142;
+    --thumb-line: #3b4d60;
+    --thumb-muted: #6c7f93;
+    --thumb-accent-soft: #2a4560;
 
-  /* 배경을 낮추고 상의를 밝혀 형태가 묻히지 않도록 */
-  --avatar-bg: #223a4f;
-  --avatar-hair: #0b121b;
-  --avatar-shirt: #5b83a8;
-  --avatar-collar: #e9eef3;
-  --avatar-skin: #eccbb5;
-  --avatar-neck: #d6ad93;
-  --avatar-blush: #d98f84;
-  --avatar-mouth: #95564e;
+    /* 배경을 낮추고 상의를 밝혀 형태가 묻히지 않도록 */
+    --avatar-bg: #223a4f;
+    --avatar-hair: #0b121b;
+    --avatar-shirt: #5b83a8;
+    --avatar-collar: #e9eef3;
+    --avatar-skin: #eccbb5;
+    --avatar-neck: #d6ad93;
+    --avatar-blush: #d98f84;
+    --avatar-mouth: #95564e;
 
-  --shiki-foreground: #e6ecf2;
-  --shiki-background: transparent;
-  --shiki-token-keyword: #8fb3d3;
-  --shiki-token-function: #9fcbe2;
-  --shiki-token-string: #82c7a5;
-  --shiki-token-string-expression: #82c7a5;
-  --shiki-token-constant: #d6b47a;
-  --shiki-token-parameter: #d3dbe3;
-  --shiki-token-comment: #a5b1be;
-  --shiki-token-punctuation: #a8b4c1;
-  --shiki-token-link: #8fb3d3;
-  --code-highlight: #263f56;
+    --shiki-foreground: #e6ecf2;
+    --shiki-background: transparent;
+    --shiki-token-keyword: #8fb3d3;
+    --shiki-token-function: #9fcbe2;
+    --shiki-token-string: #82c7a5;
+    --shiki-token-string-expression: #82c7a5;
+    --shiki-token-constant: #d6b47a;
+    --shiki-token-parameter: #d3dbe3;
+    --shiki-token-comment: #a5b1be;
+    --shiki-token-punctuation: #a8b4c1;
+    --shiki-token-link: #8fb3d3;
+    --code-highlight: #263f56;
+  }
 }
 
 @theme inline {
