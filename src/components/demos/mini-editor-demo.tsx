@@ -159,7 +159,12 @@ function NodeView({ node, isSelected, onSelect, onRendered }: NodeProps) {
       onMouseLeave={() => setShowBadge(false)}
       onClick={() => onSelect(node)}
       onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") onSelect(node);
+        // 안쪽 i 배지 버튼에서 올라온 키는 버튼이 직접 처리하므로 무시한다. Space가 페이지를 스크롤하지 않게 막는다
+        if (e.target !== e.currentTarget) return;
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onSelect(node);
+        }
       }}
       style={{ left: x, top: y, width: NODE_W, height: NODE_H }}
       className={
