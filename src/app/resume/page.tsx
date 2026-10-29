@@ -163,12 +163,15 @@ function WorkItem({ work, n }: { work: Work; n: number }) {
   );
 }
 
-/** 경력 세로선 위의 점. 지금 다니는 곳만 강조 */
+/**
+ * 경력 세로선 위의 점. 지금 다니는 곳만 강조.
+ * 인쇄는 기본으로 배경색을 빼고 테두리만 찍어서, 흰 테두리만 남아 세로선을 끊어 먹는다. 점만 배경색까지 찍게 한다
+ */
 function TreeDot({ current }: { current?: boolean }) {
   return (
     <span
       aria-hidden="true"
-      className={`absolute top-[7px] -left-[29px] size-[9px] rounded-full border-2 border-background ${current ? "bg-accent" : "bg-line"}`}
+      className={`absolute top-[7px] -left-[29px] size-[9px] rounded-full border-2 border-background [print-color-adjust:exact] ${current ? "bg-accent" : "bg-line"}`}
     />
   );
 }
