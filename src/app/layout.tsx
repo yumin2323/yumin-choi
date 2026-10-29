@@ -16,6 +16,8 @@ export const metadata: Metadata = {
     template: `%s | ${site.title}`,
   },
   description: site.description,
+  // 검색엔진에 노출하지 않음. 이미 색인된 페이지도 다시 크롤링될 때 빠지도록 robots.txt로 막지는 않는다
+  robots: { index: false, follow: false },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
