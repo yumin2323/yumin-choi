@@ -5,6 +5,10 @@ import { createCssVariablesTheme } from "shiki";
 const nextConfig: NextConfig = {
   devIndicators: false,
   pageExtensions: ["ts", "tsx", "mdx"],
+  // 페이지뿐 아니라 이미지·영상(public/works) 같은 파일도 검색 결과에 나오지 않도록 모든 응답에 붙인다
+  async headers() {
+    return [{ source: "/:path*", headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }] }];
+  },
 };
 
 // 코드 블록 색을 globals.css의 --shiki-* 변수로 칠하는 테마. 라이트/다크는 변수 값이 바꾼다.
