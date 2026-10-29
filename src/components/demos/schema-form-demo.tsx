@@ -341,13 +341,25 @@ export function SchemaFormDemo() {
   }, [text]);
 
   const props = parsed.props;
-  const signature = props ? JSON.stringify(Object.keys(props)) : "";
+  const signature = props ? JSON.stringify(props) : "";
 
   const [values, setValues] = useState<FormValues>(() => (props ? buildDefaultValues(props) : {}));
+  const prevProps = useRef(props);
 
-  // 필드 구성이 바뀌면 기본값을 다시 만든다
+  // 스키마가 바뀐 필드만 기본값으로 되돌린다. 그대로인 필드는 입력해 둔 값을 남긴다
   useEffect(() => {
-    if (props) setValues(buildDefaultValues(props));
+    if (!props) return;
+    const prev = prevProps.current;
+    prevProps.current = props;
+    const defaults = buildDefaultValues(props);
+    setValues((current) =>
+      Object.fromEntries(
+        Object.keys(props).map((key) => {
+          const same = key in current && JSON.stringify(prev?.[key]) === JSON.stringify(props[key]);
+          return [key, same ? current[key] : defaults[key]];
+        }),
+      ),
+    );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [signature]);
 
